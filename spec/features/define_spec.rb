@@ -109,6 +109,32 @@ RSpec.describe "Shorthand define syntax", type: :feature do
     end.to raise_error(PageEz::Definer::MissingDefinition, "No definition found for page object: undefined")
   end
 
+  it "allows for typical Ruby (like including modules)" do
+    po_module = Module.new do
+      include PageEz::Definer
+    end
+
+    other_module = Module.new do
+      def testing?
+        true
+      end
+    end
+
+    po_module.define do
+      page(:test) do
+        include other_module
+      end
+    end
+
+    page = build_page("")
+
+    test_page = po_module.page(:test).new(page)
+
+    page.visit("/")
+
+    expect(test_page).to be_testing
+  end
+
   def build_page(markup)
     AppGenerator
       .new

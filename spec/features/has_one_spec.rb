@@ -95,7 +95,7 @@ RSpec.describe "has_one", type: :feature do
     <ul>
       <li>Item 1</li>
       <li>Item 2</li>
-    </section>
+    </ul>
     HTML
 
     test_page = Class.new(PageEz::Page) do
@@ -114,7 +114,7 @@ RSpec.describe "has_one", type: :feature do
     <ul>
       <li>Item 1</li>
       <li>Item 2</li>
-    </section>
+    </ul>
     HTML
 
     test_page = Class.new(PageEz::Page) do
@@ -137,7 +137,7 @@ RSpec.describe "has_one", type: :feature do
     <ul>
       <li>Item 1</li>
       <li>Item 2</li>
-    </section>
+    </ul>
     HTML
 
     test_page = Class.new(PageEz::Page) do
@@ -158,7 +158,7 @@ RSpec.describe "has_one", type: :feature do
       <li data-index='0'>Item 1</li>
       <li data-index='1'>Item 2</li>
       <li data-index='2'>Item 2</li>
-    </section>
+    </ul>
     HTML
 
     test_page = Class.new(PageEz::Page) do

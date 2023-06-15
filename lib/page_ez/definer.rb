@@ -36,17 +36,25 @@ module PageEz
       end
 
       def page(name, &block)
-        raise DuplicateDefinitionError, "Already defined page object: #{name}" if @definitions[name]
+        if definition_exists?(name)
+          raise DuplicateDefinitionError, "Already defined page object: #{name}"
+        end
 
         @definitions[name] = block
       end
 
       def find(name)
-        if !@definitions.has_key?(name)
+        if !definition_exists?(name)
           raise MissingDefinition, "No definition found for page object: #{name}"
         end
 
         Class.new(PageEz::Page, &@definitions[name])
+      end
+
+      private
+
+      def definition_exists?(name)
+        @definitions.has_key?(name)
       end
     end
   end

@@ -132,6 +132,14 @@ end
 To run tests, either define `page` (via `def page` or RSpec's `let`) to allow
 for standard Capybara interaction within tests.
 
+## Roadmap
+
+* [] Verify page object interactions work within `within`
+* [] Define `form` syntax
+* [] Define `define` syntax (FactoryBot style)
+* [] "Unsafe" short-circuit for verifying elements aren't present on the page (e.g. `find("selector", count: 0)`)
+* [] Nested/reference-able page objects (from `define` syntax, by symbol, or by class name)
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at

@@ -174,6 +174,59 @@ RSpec.describe "has_one", type: :feature do
     expect(test_page.list.first_item_named("Item 2")["data-index"]).to eq("1")
   end
 
+  it "allows for using `within` to scope selectors" do
+    page = build_page(<<-HTML)
+    <section class="empty">
+    </section>
+
+    <section class="list-with-no-lis">
+      <ul>
+      </ul>
+    </section>
+
+    <section class="list-with-lis">
+      <ul>
+        <li>Item 1</li>
+        <li>Item 2</li>
+      </ul>
+    </section>
+
+    <section class="second-list-with-lis">
+      <ul>
+        <li>Item 1</li>
+      </ul>
+    </section>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :list, "ul" do
+        has_one :item_named, "li", ->(name) { {text: name} }
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    page.within "section.empty" do
+      expect(test_page).not_to have_list
+    end
+
+    page.within "section.list-with-no-lis" do
+      expect(test_page).to have_list
+      expect(test_page.list).not_to have_css("li")
+    end
+
+    page.within "section.list-with-lis" do
+      expect(test_page.list).to have_css("li", count: 2)
+      expect(test_page.list).to have_item_named("Item 1")
+      expect(test_page.list).to have_item_named("Item 2")
+    end
+
+    page.within "section.second-list-with-lis" do
+      expect(test_page.list).to have_item_named("Item 1")
+      expect(test_page.list).not_to have_item_named("Item 2")
+    end
+  end
+
   def build_page(markup)
     AppGenerator
       .new

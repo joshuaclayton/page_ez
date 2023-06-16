@@ -12,7 +12,7 @@ module PageEz
 
     def method_missing(method_name, *args, &block)
       if container.respond_to?(method_name)
-        if args.length == 1
+        if args.length < 2
           container.send(method_name, *args, &block)
         else
           container.send(method_name, args.first, **args.last, &block)

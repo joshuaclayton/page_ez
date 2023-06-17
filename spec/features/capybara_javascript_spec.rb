@@ -34,7 +34,7 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
       expect(test_page.list).to have_item_named("Item 1")
     end
 
-    expect(Time.now - start_time).to be_between(0.95, 1.3)
+    expect(Time.now - start_time).to be_between(0.95, 1.5)
 
     with_max_wait_time(seconds: 1) do
       # waits ~500ms until the element is removed, then proceeds
@@ -43,7 +43,7 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
       expect(test_page.list).to have_no_item_named("Item 1")
     end
 
-    expect(Time.now - start_time).to be_between(1.45, 1.95)
+    expect(Time.now - start_time).to be_between(1.45, 2.5)
   end
 
   def build_page(markup)

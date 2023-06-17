@@ -30,21 +30,27 @@ module PageEz
       dynamic_options ||= -> { {} }
 
       define_method(name) do |*args|
-        options.merge!(dynamic_options.call(*args))
-
-        decorate_element_with_block(find(selector, **options), &block)
+        decorate_element_with_block(
+          find(
+            selector,
+            **process_options(options, dynamic_options, *args)
+          ),
+          &block
+        )
       end
 
       define_method("has_#{name}?") do |*args|
-        options.merge!(dynamic_options.call(*args))
-
-        has_css?(selector, **options)
+        has_css?(
+          selector,
+          **process_options(options, dynamic_options, *args)
+        )
       end
 
       define_method("has_no_#{name}?") do |*args|
-        options.merge!(dynamic_options.call(*args))
-
-        has_no_css?(selector, **options)
+        has_no_css?(
+          selector,
+          **process_options(options, dynamic_options, *args)
+        )
       end
     end
 
@@ -52,9 +58,10 @@ module PageEz
       dynamic_options ||= -> { {} }
 
       define_method(name) do |*args|
-        options.merge!(dynamic_options.call(*args))
-
-        all(selector, **options).map do |element|
+        all(
+          selector,
+          **process_options(options, dynamic_options, *args)
+        ).map do |element|
           decorate_element_with_block(element, &block)
         end
       end
@@ -67,6 +74,15 @@ module PageEz
         Class.new(PageEz::Page, &block).new(element)
       else
         element
+      end
+    end
+
+    def process_options(options, dynamic_options, *args)
+      if args.last.is_a?(Hash)
+        kwargs = args.pop
+        options.merge(dynamic_options.call(*args, **kwargs))
+      else
+        options.merge(dynamic_options.call(*args))
       end
     end
   end

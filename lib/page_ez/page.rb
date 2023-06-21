@@ -65,6 +65,13 @@ module PageEz
           decorate_element_with_block(element, &block)
         end
       end
+
+      define_method("has_#{name}_count?") do |count, *args|
+        has_css?(
+          selector,
+          **process_options(options, dynamic_options, *args).merge(count: count)
+        )
+      end
     end
 
     private

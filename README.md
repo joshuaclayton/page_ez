@@ -99,6 +99,34 @@ class TodosIndex < PageEz::Page
 end
 ```
 
+### `has_many_ordered`
+
+This mirrors the `has_many` macro but adds additional methods for accessing
+elements at a specific index.
+
+```rb
+class TodosIndex < PageEz::Page
+  has_many_ordered :todos, "ul[data-role=todo-list] li" do
+    has_one :title, "span[data-role=todo-title]"
+    has_one :complete, "input[type=checkbox][data-role=mark-complete]"
+
+    def complete?
+      complete.checked?
+    end
+  end
+end
+
+todos_index = TodosIndex.new
+
+expect(todos_index.todo_at(0)).to have_text("Buy milk")
+# or
+expect(todos_index).to have_todo_at(0, text: "Buy milk")
+
+todos_index.todo_at(0).complete.click
+
+expect(todos_index.todo_at(0)).to be_complete
+```
+
 While the gem is under active development and the APIs are being determined,
 it's best to review the feature specs to understand how to use the gem.
 

@@ -31,6 +31,8 @@ GEM
       concurrent-ruby (~> 1.0)
     json (2.6.3)
     language_server-protocol (3.17.0.3)
+    launchy (2.5.2)
+      addressable (~> 2.8)
     lint_roller (1.0.0)
     matrix (0.4.2)
     mini_mime (1.1.2)
@@ -122,6 +124,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  launchy (~> 2.5)
   page_ez!
   puma (~> 6.3)
   rake (~> 13.0)

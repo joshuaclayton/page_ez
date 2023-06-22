@@ -1,4 +1,5 @@
 require "capybara/dsl"
+require "active_support/core_ext/string/inflections"
 
 module PageEz
   class Page
@@ -63,6 +64,36 @@ module PageEz
 
       define_method("has_#{name}_count?") do |count, *args|
         send(name, *args).has_count_of?(count)
+      end
+    end
+
+    def self.has_many_ordered(name, selector, dynamic_options = nil, **options, &block)
+      dynamic_options ||= -> { {} }
+
+      has_many(name, selector, dynamic_options, **options, &block)
+
+      build_selector = ->(index) do
+        # nth-of-type indices are 1-indexed rather than 0-indexed, so we add 1
+        # to allow developers to still think 'in Ruby' when using this method
+        "#{selector}:nth-of-type(#{index + 1})"
+      end
+
+      singularized_name = name.to_s.singularize
+
+      define_method("#{singularized_name}_at") do |index, *args|
+        HasOneResult.new(
+          container: container,
+          selector: build_selector.call(index),
+          options: Options.merge(options, dynamic_options, *args),
+          &block
+        )
+      end
+
+      define_method("has_#{singularized_name}_at?") do |index, *args|
+        has_css?(
+          build_selector.call(index),
+          **Options.merge(options, dynamic_options, *args)
+        )
       end
     end
   end

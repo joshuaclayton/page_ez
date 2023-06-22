@@ -37,4 +37,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "sinatra", "~> 3.0"
   spec.add_development_dependency "selenium-webdriver", "~> 4.10"
   spec.add_development_dependency "puma", "~> 6.3"
+  spec.add_development_dependency "launchy", "~> 2.5"
 end

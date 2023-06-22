@@ -46,6 +46,57 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
     expect(Time.now - start_time).to be_between(1.45, 2.5)
   end
 
+  it "allows for counting elements while waiting" do
+    page = build_page(<<-HTML)
+    <template id="item">
+      <li></li>
+    </template>
+
+    <section>
+      <ul>
+        <li>Item 1</li>
+      </ul>
+    </section>
+
+    <script type="text/javascript">
+      function generateItem(title, target) {
+        const template = document.querySelector("template#item");
+        const item = template.content.cloneNode(true);
+        item.querySelector("li").textContent = title;
+
+        target.appendChild(item);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const target = document.querySelector("section ul");
+
+        setTimeout(() => {
+          generateItem("Item 2", target);
+          generateItem("Item 3", target);
+          generateItem("Item 4", target);
+        }, 1500);
+      });
+    </script>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :list, "ul" do
+        has_many :items, "li"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    with_max_wait_time(seconds: 1) do
+      expect(test_page.list).to have_items_count(1)
+      expect(test_page.list.items.count).to eq(1)
+    end
+
+    with_max_wait_time(seconds: 2) do
+      expect(test_page.list).to have_items_count(4)
+    end
+  end
+
   def build_page(markup)
     AppGenerator
       .new

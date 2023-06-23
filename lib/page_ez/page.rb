@@ -30,11 +30,10 @@ module PageEz
       dynamic_options ||= -> { {} }
 
       define_method(name) do |*args|
-        decorate_element_with_block(
-          find(
-            selector,
-            **process_options(options, dynamic_options, *args)
-          ),
+        HasOneResult.new(
+          container: container,
+          selector: selector,
+          options: process_options(options, dynamic_options, *args),
           &block
         )
       end
@@ -58,31 +57,20 @@ module PageEz
       dynamic_options ||= -> { {} }
 
       define_method(name) do |*args|
-        all(
-          selector,
-          **process_options(options, dynamic_options, *args)
-        ).map do |element|
-          decorate_element_with_block(element, &block)
-        end
+        HasManyResult.new(
+          container: container,
+          selector: selector,
+          options: process_options(options, dynamic_options, *args),
+          &block
+        )
       end
 
       define_method("has_#{name}_count?") do |count, *args|
-        has_css?(
-          selector,
-          **process_options(options, dynamic_options, *args).merge(count: count)
-        )
+        send(name, *args).has_count_of?(count)
       end
     end
 
     private
-
-    def decorate_element_with_block(element, &block)
-      if block
-        Class.new(PageEz::Page, &block).new(element)
-      else
-        element
-      end
-    end
 
     def process_options(options, dynamic_options, *args)
       if args.last.is_a?(Hash)

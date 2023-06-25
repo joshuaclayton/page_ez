@@ -157,12 +157,4 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
       .route("/", markup)
       .run(runner: :selenium_chrome_headless)
   end
-
-  def with_max_wait_time(seconds:)
-    original_wait_time = Capybara.default_max_wait_time
-    Capybara.default_max_wait_time = seconds
-    yield
-  ensure
-    Capybara.default_max_wait_time = original_wait_time
-  end
 end

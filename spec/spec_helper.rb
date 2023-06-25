@@ -4,6 +4,7 @@ require "page_ez"
 require "sinatra/base"
 require "capybara/rspec"
 require_relative "support/app_generator"
+require_relative "support/capybara"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

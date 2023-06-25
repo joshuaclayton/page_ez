@@ -164,6 +164,7 @@ RSpec.describe "has_one", type: :feature do
     test_page = Class.new(PageEz::Page) do
       has_one :list, "ul" do
         has_one :first_item_named, "li", ->(name) { {text: name} }, match: :first
+        has_one :first_item_passed_name, "li", ->(name:) { {text: name} }, match: :first
       end
     end.new(page)
 
@@ -172,6 +173,9 @@ RSpec.describe "has_one", type: :feature do
     expect(test_page.list.first_item_named("Item 1")).to be_visible
     expect(test_page.list.first_item_named("Item 2")).to be_visible
     expect(test_page.list.first_item_named("Item 2")["data-index"]).to eq("1")
+
+    expect(test_page.list).to have_no_first_item_passed_name(name: "Item 1", text: "Bogus")
+    expect(test_page.list).to have_first_item_passed_name(name: "Wrong but will be overridden", text: "Item 1")
   end
 
   it "allows for using `within` to scope selectors" do

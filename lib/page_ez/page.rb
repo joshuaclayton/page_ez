@@ -27,13 +27,11 @@ module PageEz
     end
 
     def self.has_one(name, selector, dynamic_options = nil, **options, &block)
-      dynamic_options ||= -> { {} }
-
       define_method(name) do |*args|
         HasOneResult.new(
           container: container,
           selector: selector,
-          options: process_options(options, dynamic_options, *args),
+          options: Options.merge(options, dynamic_options, *args),
           &block
         )
       end
@@ -41,43 +39,30 @@ module PageEz
       define_method("has_#{name}?") do |*args|
         has_css?(
           selector,
-          **process_options(options, dynamic_options, *args)
+          **Options.merge(options, dynamic_options, *args)
         )
       end
 
       define_method("has_no_#{name}?") do |*args|
         has_no_css?(
           selector,
-          **process_options(options, dynamic_options, *args)
+          **Options.merge(options, dynamic_options, *args)
         )
       end
     end
 
     def self.has_many(name, selector, dynamic_options = nil, **options, &block)
-      dynamic_options ||= -> { {} }
-
       define_method(name) do |*args|
         HasManyResult.new(
           container: container,
           selector: selector,
-          options: process_options(options, dynamic_options, *args),
+          options: Options.merge(options, dynamic_options, *args),
           &block
         )
       end
 
       define_method("has_#{name}_count?") do |count, *args|
         send(name, *args).has_count_of?(count)
-      end
-    end
-
-    private
-
-    def process_options(options, dynamic_options, *args)
-      if args.last.is_a?(Hash)
-        kwargs = args.pop
-        options.merge(dynamic_options.call(*args, **kwargs))
-      else
-        options.merge(dynamic_options.call(*args))
       end
     end
   end

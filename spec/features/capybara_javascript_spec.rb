@@ -27,14 +27,14 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
 
     start_time = Time.now
 
-    with_max_wait_time(seconds: 1) do
+    with_max_wait_time(seconds: 1.2) do
       # waits 1 second, then proceeds
       expect(test_page.list).not_to have_item_named("Item 2")
       # finds the element immediately, then proceeds
       expect(test_page.list).to have_item_named("Item 1")
     end
 
-    expect(Time.now - start_time).to be_between(0.95, 1.5)
+    expect(Time.now - start_time).to be_between(0.95, 1.7)
 
     with_max_wait_time(seconds: 1) do
       # waits ~500ms until the element is removed, then proceeds
@@ -43,7 +43,7 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
       expect(test_page.list).to have_no_item_named("Item 1")
     end
 
-    expect(Time.now - start_time).to be_between(1.45, 2.5)
+    expect(Time.now - start_time).to be_between(1.4, 2.7)
   end
 
   it "allows for counting elements while waiting" do

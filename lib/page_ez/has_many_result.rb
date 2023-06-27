@@ -1,6 +1,6 @@
 module PageEz
   class HasManyResult
-    def initialize(container:, selector:, options:, &block)
+    def initialize(container:, selector:, options:, constructor:)
       @container = container
       @selector = selector
       @options = options
@@ -8,7 +8,7 @@ module PageEz
         selector,
         **options
       ).map do |element|
-        DecorateElementWithBlock.run(element, &block)
+        constructor.call(element)
       end
     end
 

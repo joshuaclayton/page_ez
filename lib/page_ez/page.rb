@@ -28,12 +28,14 @@ module PageEz
     end
 
     def self.has_one(name, selector, dynamic_options = nil, **options, &block)
+      constructor = constructor_from_block(&block)
+
       define_method(name) do |*args|
         HasOneResult.new(
           container: container,
           selector: selector,
           options: Options.merge(options, dynamic_options, *args),
-          &block
+          constructor: constructor.method(:new)
         )
       end
 
@@ -53,12 +55,14 @@ module PageEz
     end
 
     def self.has_many(name, selector, dynamic_options = nil, **options, &block)
+      constructor = constructor_from_block(&block)
+
       define_method(name) do |*args|
         HasManyResult.new(
           container: container,
           selector: selector,
           options: Options.merge(options, dynamic_options, *args),
-          &block
+          constructor: constructor.method(:new)
         )
       end
 
@@ -79,13 +83,14 @@ module PageEz
       end
 
       singularized_name = name.to_s.singularize
+      constructor = constructor_from_block(&block)
 
       define_method("#{singularized_name}_at") do |index, *args|
         HasOneResult.new(
           container: container,
           selector: build_selector.call(index),
           options: Options.merge(options, dynamic_options, *args),
-          &block
+          constructor: constructor.method(:new)
         )
       end
 
@@ -94,6 +99,18 @@ module PageEz
           build_selector.call(index),
           **Options.merge(options, dynamic_options, *args)
         )
+      end
+    end
+
+    def self.constructor_from_block(&block)
+      if block
+        Class.new(PageEz::Page, &block)
+      else
+        Class.new(BasicObject) do
+          def self.new(value)
+            value
+          end
+        end
       end
     end
   end

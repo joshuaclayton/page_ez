@@ -1,12 +1,11 @@
 module PageEz
   class HasOneResult
-    def initialize(container:, selector:, options:, &block)
-      @result = DecorateElementWithBlock.run(
+    def initialize(container:, selector:, options:, constructor:)
+      @result = constructor.call(
         container.find(
           selector,
           **options
-        ),
-        &block
+        )
       )
     end
 

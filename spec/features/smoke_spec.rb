@@ -21,4 +21,14 @@ RSpec.describe "Smoke spec", type: :feature do
     expect(hello_page.heading.text).to eq("Hello, world!")
     expect(hello_page).to have_title("Application Title")
   end
+
+  it "raises when incorrect methods are used immediately" do
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :dashboard, "section[data-role=cards]" do
+          has_many1 :cards, "ul li"
+        end
+      end
+    end.to raise_error(NoMethodError, /has_many1/)
+  end
 end

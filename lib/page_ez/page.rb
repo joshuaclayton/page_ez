@@ -1,8 +1,12 @@
 require "capybara/dsl"
 require "active_support/core_ext/string/inflections"
+require "active_support/core_ext/class/attribute"
 
 module PageEz
   class Page
+    class_attribute :depth
+    self.depth = 0
+
     attr_reader :container
 
     def initialize(container = nil)
@@ -24,9 +28,11 @@ module PageEz
     end
 
     def self.has_one(name, selector, dynamic_options = nil, **options, &block)
+      debug_at_depth("has_one :#{name}, \"#{selector}\"")
+
       constructor = constructor_from_block(&block)
 
-      define_method(name) do |*args|
+      logged_define_method(name) do |*args|
         HasOneResult.new(
           container: container,
           selector: selector,
@@ -35,14 +41,14 @@ module PageEz
         )
       end
 
-      define_method("has_#{name}?") do |*args|
+      logged_define_method("has_#{name}?") do |*args|
         has_css?(
           selector,
           **Options.merge(options, dynamic_options, *args)
         )
       end
 
-      define_method("has_no_#{name}?") do |*args|
+      logged_define_method("has_no_#{name}?") do |*args|
         has_no_css?(
           selector,
           **Options.merge(options, dynamic_options, *args)
@@ -51,26 +57,15 @@ module PageEz
     end
 
     def self.has_many(name, selector, dynamic_options = nil, **options, &block)
-      constructor = constructor_from_block(&block)
+      debug_at_depth("has_many :#{name}, \"#{selector}\"")
 
-      define_method(name) do |*args|
-        HasManyResult.new(
-          container: container,
-          selector: selector,
-          options: Options.merge(options, dynamic_options, *args),
-          constructor: constructor.method(:new)
-        )
-      end
-
-      define_method("has_#{name}_count?") do |count, *args|
-        send(name, *args).has_count_of?(count)
-      end
+      define_has_many(name, selector, dynamic_options, **options, &block)
     end
 
     def self.has_many_ordered(name, selector, dynamic_options = nil, **options, &block)
-      dynamic_options ||= -> { {} }
+      debug_at_depth("has_many_ordered :#{name}, \"#{selector}\"")
 
-      has_many(name, selector, dynamic_options, **options, &block)
+      constructor = define_has_many(name, selector, dynamic_options, **options, &block)
 
       build_selector = ->(index) do
         # nth-of-type indices are 1-indexed rather than 0-indexed, so we add 1
@@ -79,9 +74,8 @@ module PageEz
       end
 
       singularized_name = name.to_s.singularize
-      constructor = constructor_from_block(&block)
 
-      define_method("#{singularized_name}_at") do |index, *args|
+      logged_define_method("#{singularized_name}_at") do |index, *args|
         HasOneResult.new(
           container: container,
           selector: build_selector.call(index),
@@ -90,7 +84,7 @@ module PageEz
         )
       end
 
-      define_method("has_#{singularized_name}_at?") do |index, *args|
+      logged_define_method("has_#{singularized_name}_at?") do |index, *args|
         has_css?(
           build_selector.call(index),
           **Options.merge(options, dynamic_options, *args)
@@ -98,9 +92,41 @@ module PageEz
       end
     end
 
+    def self.define_has_many(name, selector, dynamic_options = nil, **options, &block)
+      constructor = constructor_from_block(&block)
+
+      logged_define_method(name) do |*args|
+        HasManyResult.new(
+          container: container,
+          selector: selector,
+          options: Options.merge(options, dynamic_options, *args),
+          constructor: constructor.method(:new)
+        )
+      end
+
+      logged_define_method("has_#{name}_count?") do |count, *args|
+        send(name, *args).has_count_of?(count)
+      end
+
+      constructor
+    end
+    private_class_method :define_has_many
+
+    def self.debug_at_depth(message)
+      PageEz.configuration.logger.debug("#{"  " * depth}#{message}")
+    end
+    private_class_method :debug_at_depth
+
+    def self.inherited(subclass)
+      PageEz.configuration.logger.debug("Declaring page object: #{subclass.name || "{anonymous page object}"}")
+    end
+
     def self.constructor_from_block(&block)
       if block
-        Class.new(PageEz::Page, &block)
+        Class.new(self).tap do |page_class|
+          page_class.depth += 1
+          page_class.class_eval(&block)
+        end
       else
         Class.new(BasicObject) do
           def self.new(value)
@@ -108,6 +134,12 @@ module PageEz
           end
         end
       end
+    end
+    private_class_method :constructor_from_block
+
+    def self.logged_define_method(name, &block)
+      debug_at_depth("* #{name}")
+      define_method(name, &block)
     end
   end
 end

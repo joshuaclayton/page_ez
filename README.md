@@ -130,6 +130,20 @@ expect(todos_index.todo_at(0)).to be_complete
 While the gem is under active development and the APIs are being determined,
 it's best to review the feature specs to understand how to use the gem.
 
+## Configuration
+
+### Logger
+
+Configure PageEz's logger to capture debugging information about
+which page objects and methods are defined.
+
+
+```rb
+PageEz.configure do |config|
+  config.logger = Logger.new($stdout)
+end
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run

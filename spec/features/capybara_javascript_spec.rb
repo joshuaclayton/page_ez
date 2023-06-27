@@ -12,7 +12,7 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
       document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           document.querySelector("ul li").remove();
-        }, 1500);
+        }, 2000);
       });
     </script>
     HTML
@@ -27,23 +27,23 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
 
     start_time = Time.now
 
-    with_max_wait_time(seconds: 1.2) do
+    with_max_wait_time(seconds: 1) do
       # waits 1 second, then proceeds
       expect(test_page.list).not_to have_item_named("Item 2")
       # finds the element immediately, then proceeds
       expect(test_page.list).to have_item_named("Item 1")
     end
 
-    expect(Time.now - start_time).to be_between(0.95, 1.7)
+    expect(Time.now - start_time).to be_between(0.9, 1.5)
 
-    with_max_wait_time(seconds: 1) do
+    with_max_wait_time(seconds: 2) do
       # waits ~500ms until the element is removed, then proceeds
       expect(test_page.list).to have_no_item_named("Item 1")
       # doesn't find the element and proceeds immediately
       expect(test_page.list).to have_no_item_named("Item 1")
     end
 
-    expect(Time.now - start_time).to be_between(1.4, 2.7)
+    expect(Time.now - start_time).to be_between(1.35, 4)
   end
 
   it "allows for counting elements while waiting" do

@@ -21,9 +21,9 @@ module PageEz
 
     private
 
-    def method_missing(method_name, *args, &block)
-      if @result.respond_to?(method_name)
-        @result.send(method_name, *args, &block)
+    def method_missing(*args, **kwargs, &block)
+      if @result.respond_to?(args[0])
+        @result.send(*args, **kwargs, &block)
       else
         super
       end

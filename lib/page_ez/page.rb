@@ -11,13 +11,9 @@ module PageEz
       end.new
     end
 
-    def method_missing(method_name, *args, &block)
-      if container.respond_to?(method_name)
-        if args.length < 2
-          container.send(method_name, *args, &block)
-        else
-          container.send(method_name, args.first, **args.last, &block)
-        end
+    def method_missing(*args, **kwargs, &block)
+      if container.respond_to?(args[0])
+        container.send(*args, **kwargs, &block)
       else
         super
       end

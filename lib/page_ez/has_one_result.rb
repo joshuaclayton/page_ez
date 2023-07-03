@@ -11,12 +11,10 @@ module PageEz
 
     private
 
-    def method_missing(method_name, *args, &block)
-      if @result.respond_to?(method_name)
-        @result.send(method_name, *args, &block)
-      else
-        super
-      end
+    def method_missing(...)
+      @result.send(...)
+    rescue NoMethodError
+      super(...)
     end
 
     def respond_to_missing?(method_name, include_private = false)

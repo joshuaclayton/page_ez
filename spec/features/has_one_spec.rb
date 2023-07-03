@@ -231,6 +231,30 @@ RSpec.describe "has_one", type: :feature do
     end
   end
 
+  it "allows for interacting with forms" do
+    page = build_page(<<-HTML)
+    <form>
+      <input name="name" type="text" />
+      <input name="email" type="text" />
+    </form>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :form, "form" do
+        has_one :name_field, "input[name=name]"
+        has_one :email_field, "input[name=email]"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    test_page.form.name_field.fill_in with: "Awesome Person"
+    test_page.form.email_field.fill_in with: "person@example.com"
+
+    expect(test_page.form.name_field.value).to eq "Awesome Person"
+    expect(test_page.form.email_field.value).to eq "person@example.com"
+  end
+
   def build_page(markup)
     AppGenerator
       .new

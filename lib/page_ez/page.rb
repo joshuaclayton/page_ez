@@ -91,7 +91,7 @@ module PageEz
       end
     end
 
-    def self.define_has_many(name, selector, dynamic_options = nil, **options, &block)
+    private_class_method def self.define_has_many(name, selector, dynamic_options = nil, **options, &block)
       constructor = constructor_from_block(&block)
 
       logged_define_method(name) do |*args|
@@ -109,23 +109,20 @@ module PageEz
 
       constructor
     end
-    private_class_method :define_has_many
 
-    def self.debug_at_depth(message)
+    private_class_method def self.debug_at_depth(message)
       PageEz.configuration.logger.debug("#{"  " * depth}#{message}")
     end
-    private_class_method :debug_at_depth
 
-    def self.warn_at_depth(message)
+    private_class_method def self.warn_at_depth(message)
       PageEz.configuration.logger.warn("#{"  " * depth}#{message}")
     end
-    private_class_method :warn_at_depth
 
     def self.inherited(subclass)
       PageEz.configuration.logger.debug("Declaring page object: #{subclass.name || "{anonymous page object}"}")
     end
 
-    def self.constructor_from_block(&block)
+    private_class_method def self.constructor_from_block(&block)
       if block
         Class.new(self).tap do |page_class|
           page_class.depth += 1
@@ -139,14 +136,13 @@ module PageEz
         end
       end
     end
-    private_class_method :constructor_from_block
 
-    def self.logged_define_method(name, &block)
+    private_class_method def self.logged_define_method(name, &block)
       debug_at_depth("* #{name}")
       define_method(name, &block)
     end
 
-    def self.process_macro(macro, name, selector)
+    private_class_method def self.process_macro(macro, name, selector)
       rendered_macro = "#{macro} :#{name}, \"#{selector}\""
 
       debug_at_depth(rendered_macro)
@@ -170,6 +166,5 @@ module PageEz
         end
       end
     end
-    private_class_method :process_macro
   end
 end

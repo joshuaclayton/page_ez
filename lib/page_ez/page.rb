@@ -28,7 +28,7 @@ module PageEz
     end
 
     def self.has_one(name, selector, dynamic_options = nil, **options, &block)
-      debug_at_depth("has_one :#{name}, \"#{selector}\"")
+      process_macro(:has_one, name, selector)
 
       constructor = constructor_from_block(&block)
 
@@ -57,13 +57,13 @@ module PageEz
     end
 
     def self.has_many(name, selector, dynamic_options = nil, **options, &block)
-      debug_at_depth("has_many :#{name}, \"#{selector}\"")
+      process_macro(:has_many, name, selector)
 
       define_has_many(name, selector, dynamic_options, **options, &block)
     end
 
     def self.has_many_ordered(name, selector, dynamic_options = nil, **options, &block)
-      debug_at_depth("has_many_ordered :#{name}, \"#{selector}\"")
+      process_macro(:has_many_ordered, name, selector)
 
       constructor = define_has_many(name, selector, dynamic_options, **options, &block)
 
@@ -141,5 +141,13 @@ module PageEz
       debug_at_depth("* #{name}")
       define_method(name, &block)
     end
+
+    def self.process_macro(macro, name, selector)
+      rendered_macro = "#{macro} :#{name}, \"#{selector}\""
+
+      debug_at_depth(rendered_macro)
+    end
+
+    private_class_method :process_macro
   end
 end

@@ -4,6 +4,7 @@ require "page_ez"
 require "sinatra/base"
 require "capybara/rspec"
 require_relative "support/app_generator"
+require_relative "support/fake_logger"
 require_relative "support/capybara"
 require_relative "support/matchers/contain_in_order"
 
@@ -19,12 +20,8 @@ RSpec.configure do |config|
   end
 
   config.around do |example|
-    old_logger = PageEz.configuration.logger
-
     example.run
   ensure
-    PageEz.configure do |config|
-      config.logger = old_logger
-    end
+    PageEz.configuration.reset
   end
 end

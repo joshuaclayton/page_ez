@@ -3,7 +3,11 @@ module PageEz
     attr_accessor :logger
 
     def initialize
-      @logger = NullLogger.new
+      reset
+    end
+
+    def reset
+      self.logger = NullLogger.new
     end
   end
 end

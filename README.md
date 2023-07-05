@@ -144,6 +144,24 @@ PageEz.configure do |config|
 end
 ```
 
+### Pluralization Warnings
+
+Use of the different macros imply singular or plural values, e.g.
+
+* `has_one :todos_list, "ul"`
+* `has_many :cards, "li[data-role=card]"`
+
+By default, PageEz allows for any pluralization usage regardless of macro. You
+can configure PageEz to either warn (via its logger) or raise an exception if
+pluralization doesn't look to align. Behind the scenes, PageEz uses
+ActiveSupport's pluralization mechanisms.
+
+```rb
+PageEz.configure do |config|
+  config.on_pluralization_mismatch = :warn # or :raise, nil is the default
+end
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run

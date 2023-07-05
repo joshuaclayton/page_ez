@@ -1,5 +1,4 @@
 require "capybara/dsl"
-require "active_support/core_ext/string/inflections"
 require "active_support/core_ext/class/attribute"
 
 module PageEz
@@ -73,7 +72,7 @@ module PageEz
         "#{selector}:nth-of-type(#{index + 1})"
       end
 
-      singularized_name = name.to_s.singularize
+      singularized_name = Pluralization.new(name).singularize
 
       logged_define_method("#{singularized_name}_at") do |index, *args|
         HasOneResult.new(
@@ -117,6 +116,11 @@ module PageEz
     end
     private_class_method :debug_at_depth
 
+    def self.warn_at_depth(message)
+      PageEz.configuration.logger.warn("#{"  " * depth}#{message}")
+    end
+    private_class_method :warn_at_depth
+
     def self.inherited(subclass)
       PageEz.configuration.logger.debug("Declaring page object: #{subclass.name || "{anonymous page object}"}")
     end
@@ -146,8 +150,26 @@ module PageEz
       rendered_macro = "#{macro} :#{name}, \"#{selector}\""
 
       debug_at_depth(rendered_macro)
-    end
 
+      message = case [macro, Pluralization.new(name).singular? ? :singular : :plural]
+      in [:has_one, :plural]
+        "consider singularizing :#{name} in #{rendered_macro}"
+      in [:has_many, :singular]
+        "consider pluralizing :#{name} in #{rendered_macro}"
+      in [:has_many_ordered, :singular]
+        "consider pluralizing :#{name} in #{rendered_macro}"
+      in _
+      end
+
+      if message
+        case PageEz.configuration.on_pluralization_mismatch
+        when :warn
+          warn_at_depth(message)
+        when :raise
+          raise PluralizationMismatchError, message
+        end
+      end
+    end
     private_class_method :process_macro
   end
 end

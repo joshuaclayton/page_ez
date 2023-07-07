@@ -20,6 +20,10 @@ RSpec.describe "Page object composition", type: :feature do
       <li><h3>Stat 2</h3></li>
       <li><h3>Stat 3</h3></li>
     </ul>
+
+    <footer>
+      <a data-role="home-link" href="/">Home</a>
+    </footer>
     HTML
 
     # rubocop:disable Lint/ConstantDefinitionInBlock
@@ -33,14 +37,18 @@ RSpec.describe "Page object composition", type: :feature do
 
     class Dashboard < PageEz::Page
       has_many_ordered :metrics, "ul.metrics li" do
-        def card
-          Card.new(self)
+        has_one :card, Card
+      end
+
+      has_one :primary_nav, PrimaryNav, base_selector: "nav.primary" do
+        has_one :other_thing, "a"
+
+        def awesome?
+          true
         end
       end
 
-      def primary_nav
-        PrimaryNav.new(find("nav.primary"))
-      end
+      has_one :footer_nav, PrimaryNav, base_selector: "footer"
     end
     # rubocop:enable Lint/ConstantDefinitionInBlock
 
@@ -48,9 +56,18 @@ RSpec.describe "Page object composition", type: :feature do
 
     dashboard = Dashboard.new
 
-    expect(dashboard.primary_nav).to have_home_link
+    expect do
+      dashboard.primary_nav.home_link
+    end.not_to raise_error
+
+    expect(dashboard).to have_primary_nav
+    expect(dashboard.primary_nav).to be_awesome
+    expect(dashboard.primary_nav).to have_text("Home")
+    expect(dashboard.primary_nav.other_thing).to have_text("Home")
+    expect(dashboard.footer_nav).not_to respond_to(:awesome?)
     expect(dashboard.metrics.size).to eq(3)
     expect(dashboard.metric_at(0).card.header).to have_text("Metric 0")
+    expect(dashboard.metric_at(0).card).to have_header(text: "Metric 0")
   end
 
   def build_page(markup)

@@ -27,20 +27,52 @@ module PageEz
       container.respond_to?(method_name, include_private) || super
     end
 
-    def self.has_one(name, selector, dynamic_options = nil, **options, &block)
-      process_macro(:has_one, name, selector)
+    def self.has_one(name, *args, **options, &block)
+      selector = nil
+      dynamic_options = nil
+      composed_class = nil
 
-      constructor = constructor_from_block(&block)
-
-      logged_define_method(name) do |*args|
-        HasOneResult.new(
-          container: container,
-          selector: selector,
-          options: Options.merge(options, dynamic_options, *args),
-          constructor: constructor.method(:new)
-        )
+      case [args.length, args.first]
+      in [2, _] then selector, dynamic_options = args
+      in [1, Class] then composed_class = args.first
+      in [1, String] then selector = args.first
       end
 
+      process_macro(:has_one, name, selector)
+
+      constructor = constructor_from_block(composed_class, &block)
+
+      if selector
+        logged_define_method(name) do |*args|
+          HasOneResult.new(
+            container: container,
+            selector: selector,
+            options: Options.merge(options, dynamic_options, *args),
+            constructor: constructor.method(:new)
+          )
+        end
+
+        define_has_one_predicate_methods(name, selector, options, dynamic_options)
+      elsif composed_class
+        base_selector = options.delete(:base_selector)
+
+        logged_define_method(name) do |*args|
+          container = if base_selector
+            find(base_selector)
+          else
+            self
+          end
+
+          constructor.new(container)
+        end
+
+        if base_selector
+          define_has_one_predicate_methods(name, base_selector, options, dynamic_options)
+        end
+      end
+    end
+
+    private_class_method def self.define_has_one_predicate_methods(name, selector, options, dynamic_options)
       logged_define_method("has_#{name}?") do |*args|
         has_css?(
           selector,
@@ -123,12 +155,14 @@ module PageEz
       PageEz.configuration.logger.debug("Declaring page object: #{subclass.name || "{anonymous page object}"}")
     end
 
-    private_class_method def self.constructor_from_block(&block)
+    private_class_method def self.constructor_from_block(superclass = nil, &block)
       if block
-        Class.new(self).tap do |page_class|
+        Class.new(superclass || self).tap do |page_class|
           page_class.depth += 1
           page_class.class_eval(&block)
         end
+      elsif superclass
+        superclass
       else
         Class.new(BasicObject) do
           def self.new(value)

@@ -135,6 +135,26 @@ it's best to review the feature specs to understand how to use the gem.
 Because page objects can encompass as much or as little of the DOM as desired,
 it's possible to compose multiple page objects.
 
+### Composition via DSL
+
+```rb
+class Card < PageEz::Page
+  has_one :header, "h3"
+end
+
+class PrimaryNav < PageEz::Page
+  has_one :home_link, "a[data-role='home-link']"
+end
+
+class Dashboard < PageEz::Page
+  has_many_ordered :metrics, "ul.metrics li" do
+    has_one :card, Card
+  end
+
+  has_one :primary_nav, PrimaryNav, base_selector: "nav.primary"
+end
+```
+
 ### Manual Composition
 
 ```rb
@@ -271,7 +291,7 @@ for standard Capybara interaction within tests.
 * [ ] Define `form` syntax
 * [ ] Define `define` syntax (FactoryBot style)
 * [ ] "Unsafe" short-circuit for verifying elements aren't present on the page (e.g. `find("selector", count: 0)`)
-* [ ] Nested/reference-able page objects (from `define` syntax, by symbol, or by class name)
+* [x] Nested/reference-able page objects (from `define` syntax, by symbol, or by class name)
 
 ## Contributing
 

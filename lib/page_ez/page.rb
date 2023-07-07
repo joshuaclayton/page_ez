@@ -5,6 +5,7 @@ module PageEz
   class Page
     class_attribute :depth
     self.depth = 0
+    undef_method :select
 
     attr_reader :container
 

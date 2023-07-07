@@ -130,6 +130,79 @@ expect(todos_index.todo_at(0)).to be_complete
 While the gem is under active development and the APIs are being determined,
 it's best to review the feature specs to understand how to use the gem.
 
+## Page Object Composition
+
+Because page objects can encompass as much or as little of the DOM as desired,
+it's possible to compose multiple page objects.
+
+### Manual Composition
+
+```rb
+class Card < PageEz::Page
+  has_one :header, "h3"
+end
+
+class PrimaryNav < PageEz::Page
+  has_one :home_link, "a[data-role='home-link']"
+end
+
+class Dashboard < PageEz::Page
+  has_many_ordered :metrics, "ul.metrics li" do
+    def card
+      # passing `self` is required to scope the query for the specific card
+      # within the metric when nested inside `has_one`, `has_many`, and
+      # `has_many_ordered`
+      Card.new(self)
+    end
+  end
+
+  def primary_nav
+    # pass the element `Capybara::Node::Element` to scope page interaction when
+    # composing at the top-level PageEz::Page class
+    PrimaryNav.new(find("nav.primary"))
+  end
+end
+```
+
+With the following markup:
+
+```html
+<nav class="primary">
+  <ul>
+    <li><a data-role="home-link" href="/">Home</a></li>
+  </ul>
+</nav>
+
+<ul class="metrics">
+  <li><h3>Metric 0</h3></li>
+  <li><h3>Metric 1</h3></li>
+  <li><h3>Metric 2</h3></li>
+</ul>
+
+<ul class="stats">
+  <li><h3>Stat 1</h3></li>
+  <li><h3>Stat 2</h3></li>
+  <li><h3>Stat 3</h3></li>
+</ul>
+```
+
+One could then interact with the card as such:
+
+```rb
+# within a spec file
+
+visit "/"
+
+dashboard = Dashboard.new
+
+expect(dashboard.primary_nav).to have_home_link
+expect(dashboard.metric_at(0).card.header).to have_text("Metric 0")
+```
+
+Review page object composition within the [composition specs].
+
+[composition specs]: ./spec/features/composition_spec.rb
+
 ## Configuration
 
 ### Logger

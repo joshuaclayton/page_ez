@@ -4,7 +4,11 @@ require "active_support/core_ext/class/attribute"
 module PageEz
   class Page
     class_attribute :depth
+    class_attribute :declared_names
+
     self.depth = 0
+    self.declared_names = []
+
     undef_method :select
 
     attr_reader :container
@@ -177,9 +181,18 @@ module PageEz
       define_method(name, &block)
     end
 
+    private_class_method def self.register_name(name)
+      if declared_names.include?(name)
+        raise DuplicateElementDeclarationError, "duplicate element :#{name} declared"
+      end
+
+      self.declared_names += [name]
+    end
+
     private_class_method def self.process_macro(macro, name, selector)
       rendered_macro = "#{macro} :#{name}, \"#{selector}\""
 
+      register_name(name)
       debug_at_depth(rendered_macro)
 
       message = case [macro, Pluralization.new(name).singular? ? :singular : :plural]

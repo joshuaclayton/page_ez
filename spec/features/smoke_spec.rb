@@ -31,4 +31,13 @@ RSpec.describe "Smoke spec", type: :feature do
       end
     end.to raise_error(NoMethodError, /has_many1/)
   end
+
+  it "raises when multiple macros are declared with the same name" do
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :list, "ul"
+        has_many :list, "ul li"
+      end
+    end.to raise_error(PageEz::DuplicateElementDeclarationError, /list/)
+  end
 end

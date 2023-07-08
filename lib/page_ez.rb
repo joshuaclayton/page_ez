@@ -14,6 +14,8 @@ module PageEz
 
   class PluralizationMismatchError < StandardError; end
 
+  class DuplicateElementDeclarationError < StandardError; end
+
   def self.configuration
     @configuration ||= Configuration.new
   end

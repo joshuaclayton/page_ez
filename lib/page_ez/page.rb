@@ -3,6 +3,7 @@ require "active_support/core_ext/class/attribute"
 
 module PageEz
   class Page
+    include DelegatesTo[:container]
     class_attribute :depth
     class_attribute :declared_names
 
@@ -17,18 +18,6 @@ module PageEz
       @container = container || Class.new do
         include Capybara::DSL
       end.new
-    end
-
-    def method_missing(*args, **kwargs, &block)
-      if container.respond_to?(args[0])
-        container.send(*args, **kwargs, &block)
-      else
-        super
-      end
-    end
-
-    def respond_to_missing?(method_name, include_private = false)
-      container.respond_to?(method_name, include_private) || super
     end
 
     def self.has_one(name, *args, **options, &block)

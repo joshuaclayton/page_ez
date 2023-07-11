@@ -4,11 +4,9 @@ require "active_support/core_ext/class/attribute"
 module PageEz
   class Page
     include DelegatesTo[:container]
-    class_attribute :depth
-    class_attribute :declared_names
+    class_attribute :visitor
 
-    self.depth = 0
-    self.declared_names = []
+    self.visitor = PageVisitor.new
 
     undef_method :select
 
@@ -31,7 +29,7 @@ module PageEz
       in [1, String] then selector = args.first
       end
 
-      process_macro(:has_one, name, selector)
+      visitor.process_macro(:has_one, name, selector)
 
       constructor = constructor_from_block(composed_class, &block)
 
@@ -82,13 +80,13 @@ module PageEz
     end
 
     def self.has_many(name, selector, dynamic_options = nil, **options, &block)
-      process_macro(:has_many, name, selector)
+      visitor.process_macro(:has_many, name, selector)
 
       define_has_many(name, selector, dynamic_options, **options, &block)
     end
 
     def self.has_many_ordered(name, selector, dynamic_options = nil, **options, &block)
-      process_macro(:has_many_ordered, name, selector)
+      visitor.process_macro(:has_many_ordered, name, selector)
 
       constructor = define_has_many(name, selector, dynamic_options, **options, &block)
 
@@ -136,23 +134,20 @@ module PageEz
       constructor
     end
 
-    private_class_method def self.debug_at_depth(message)
-      PageEz.configuration.logger.debug("#{"  " * depth}#{message}")
-    end
-
-    private_class_method def self.warn_at_depth(message)
-      PageEz.configuration.logger.warn("#{"  " * depth}#{message}")
-    end
-
     def self.inherited(subclass)
-      PageEz.configuration.logger.debug("Declaring page object: #{subclass.name || "{anonymous page object}"}")
+      if ancestors.first == PageEz::Page
+        visitor.reset
+      end
+
+      visitor.inherit_from(subclass)
     end
 
     private_class_method def self.constructor_from_block(superclass = nil, &block)
       if block
-        Class.new(superclass || self).tap do |page_class|
-          page_class.depth += 1
-          page_class.class_eval(&block)
+        Class.new(superclass || self).tap do |klass|
+          visitor.begin_block_evaluation
+          klass.class_eval(&block)
+          visitor.end_block_evaluation
         end
       elsif superclass
         superclass
@@ -166,42 +161,8 @@ module PageEz
     end
 
     private_class_method def self.logged_define_method(name, &block)
-      debug_at_depth("* #{name}")
+      visitor.define_method(name)
       define_method(name, &block)
-    end
-
-    private_class_method def self.register_name(name)
-      if declared_names.include?(name)
-        raise DuplicateElementDeclarationError, "duplicate element :#{name} declared"
-      end
-
-      self.declared_names += [name]
-    end
-
-    private_class_method def self.process_macro(macro, name, selector)
-      rendered_macro = "#{macro} :#{name}, \"#{selector}\""
-
-      register_name(name)
-      debug_at_depth(rendered_macro)
-
-      message = case [macro, Pluralization.new(name).singular? ? :singular : :plural]
-      in [:has_one, :plural]
-        "consider singularizing :#{name} in #{rendered_macro}"
-      in [:has_many, :singular]
-        "consider pluralizing :#{name} in #{rendered_macro}"
-      in [:has_many_ordered, :singular]
-        "consider pluralizing :#{name} in #{rendered_macro}"
-      in _
-      end
-
-      if message
-        case PageEz.configuration.on_pluralization_mismatch
-        when :warn
-          warn_at_depth(message)
-        when :raise
-          raise PluralizationMismatchError, message
-        end
-      end
     end
   end
 end

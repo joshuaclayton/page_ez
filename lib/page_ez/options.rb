@@ -5,14 +5,11 @@ module PageEz
     def self.merge(options, dynamic_options = nil, *args)
       dynamic_options ||= -> { {} }
 
-      keys_to_extract = dynamic_options.parameters.filter_map do |type, name|
-        if type == :keyreq || type == :key
-          name
-        end
-      end
+      parameters = Parameters.build(dynamic_options)
+      keys_to_extract = parameters.keyword_args
 
       if args.last.is_a?(Hash)
-        if dynamic_options.arity == 0
+        if parameters.no_arguments?
           options.merge(*args)
         else
           kwargs = args.pop

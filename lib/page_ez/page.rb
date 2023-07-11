@@ -24,9 +24,14 @@ module PageEz
       composed_class = nil
 
       case [args.length, args.first]
+      in [2, v] if PageEz.configuration.selector_generators.key?(v) then
+        selector = PageEz.configuration.selector_generators[v]
+        dynamic_options = args[1]
       in [2, _] then selector, dynamic_options = args
       in [1, Class] then composed_class = args.first
       in [1, String] then selector = args.first
+      in [1, v] if PageEz.configuration.selector_generators.key?(v) then
+        selector = PageEz.configuration.selector_generators[v]
       end
 
       visitor.process_macro(:has_one, name, selector)
@@ -35,10 +40,12 @@ module PageEz
 
       if selector
         logged_define_method(name) do |*args|
+          evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector)
+
           HasOneResult.new(
             container: container,
-            selector: selector,
-            options: Options.merge(options, dynamic_options, *args),
+            selector: evaluator.selector,
+            options: Options.merge(options, dynamic_options, *evaluator.args),
             constructor: constructor.method(:new)
           )
         end
@@ -65,16 +72,20 @@ module PageEz
 
     private_class_method def self.define_has_one_predicate_methods(name, selector, options, dynamic_options)
       logged_define_method("has_#{name}?") do |*args|
+        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector)
+
         has_css?(
-          selector,
-          **Options.merge(options, dynamic_options, *args)
+          evaluator.selector,
+          **Options.merge(options, dynamic_options, *evaluator.args)
         )
       end
 
       logged_define_method("has_no_#{name}?") do |*args|
+        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector)
+
         has_no_css?(
-          selector,
-          **Options.merge(options, dynamic_options, *args)
+          evaluator.selector,
+          **Options.merge(options, dynamic_options, *evaluator.args)
         )
       end
     end

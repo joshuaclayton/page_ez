@@ -255,6 +255,32 @@ PageEz.configure do |config|
 end
 ```
 
+### Collisions with Capybara's RSpec Matchers
+
+Capybara ships with a set of RSpec matchers, including:
+
+* `have_title`
+* `have_link`
+* `have_button`
+* `have_field`
+* `have_select`
+* `have_table`
+* `have_text`
+
+By default, if any elements are declared in PageEz that would overlap
+with these matchers (e.g. `has_one :title, "h3"`), PageEz will raise an
+exception in order to prevent confusing errors when asserting via predicate
+matchers (since PageEz will define corresponding `has_title?` and
+`has_no_title?` methods).
+
+You can configure the behavior to warn (or do nothing):
+
+```rb
+PageEz.configure do |config|
+  config.on_matcher_collision = :warn # or nil, :raise is the default
+end
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run

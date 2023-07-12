@@ -4,7 +4,8 @@ module PageEz
       @visitors = [
         Visitors::DebugVisitor.new,
         Visitors::RegisteredNameVisitor.new,
-        Visitors::MacroPluralizationVisitor.new
+        Visitors::MacroPluralizationVisitor.new,
+        Visitors::MatcherCollisionVisitor.new
       ]
     end
 

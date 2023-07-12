@@ -1,6 +1,6 @@
 module PageEz
   class Configuration
-    VALID_PLURALIZATION_MISMATCH_BEHAVIORS = [:warn, :raise, nil].freeze
+    VALID_MISMATCH_BEHAVIORS = [:warn, :raise, nil].freeze
     attr_accessor :logger
     attr_reader :on_pluralization_mismatch
 
@@ -9,8 +9,8 @@ module PageEz
     end
 
     def on_pluralization_mismatch=(value)
-      if !VALID_PLURALIZATION_MISMATCH_BEHAVIORS.include?(value)
-        raise ArgumentError, "#{value.inspect} must be one of #{VALID_PLURALIZATION_MISMATCH_BEHAVIORS}"
+      if !VALID_MISMATCH_BEHAVIORS.include?(value)
+        raise ArgumentError, "#{value.inspect} must be one of #{VALID_MISMATCH_BEHAVIORS}"
       end
 
       @on_pluralization_mismatch = value

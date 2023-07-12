@@ -43,7 +43,7 @@ RSpec.describe "has_many_ordered", type: :feature do
     test_page = Class.new(PageEz::Page) do
       has_one :list, "section ul" do
         has_many_ordered :items, "li" do
-          has_one :title, "span[data-role=title]"
+          has_one :item_title, "span[data-role=title]"
         end
       end
     end.new(page)
@@ -65,10 +65,10 @@ RSpec.describe "has_many_ordered", type: :feature do
 
     page.visit "/"
 
-    expect(test_page.list.item_at(0).title).to have_text("Item 1")
-    expect(test_page.list.item_at(1).title).to have_text("Item 2")
-    expect(test_page.list.item_at(2).title).to have_text("Item 3")
-    expect(test_page.list.item_at(3).title).to have_text("Item 4")
+    expect(test_page.list.item_at(0).item_title).to have_text("Item 1")
+    expect(test_page.list.item_at(1).item_title).to have_text("Item 2")
+    expect(test_page.list.item_at(2).item_title).to have_text("Item 3")
+    expect(test_page.list.item_at(3).item_title).to have_text("Item 4")
 
     page.visit "/"
 
@@ -88,7 +88,7 @@ RSpec.describe "has_many_ordered", type: :feature do
     page.visit "/"
 
     with_max_wait_time(seconds: 0.1) do
-      expect(test_page.list.item_at(2, wait: 1).title).to have_text("Item 3")
+      expect(test_page.list.item_at(2, wait: 1).item_title).to have_text("Item 3")
     end
   end
 

@@ -24,7 +24,7 @@ RSpec.describe PageEz::Page do
     Class.new(PageEz::Page) do
       has_one :dashboard, "section" do
         has_many :cards, "li[data-role=card]" do
-          has_one :title, "h3"
+          has_one :header, "h3"
         end
 
         has_many_ordered :contacts, "li[data-role=contact]" do
@@ -36,7 +36,7 @@ RSpec.describe PageEz::Page do
     expect(logger.debugs).to contain_in_order(
       "has_one :dashboard, \"section\"",
       "  has_many :cards, \"li[data-role=card]\"",
-      "    has_one :title, \"h3\"",
+      "    has_one :header, \"h3\"",
       "  has_many_ordered :contacts, \"li[data-role=contact]\"",
       "    has_one :name, \"h3\""
     )

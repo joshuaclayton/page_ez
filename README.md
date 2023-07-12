@@ -107,7 +107,7 @@ elements at a specific index.
 ```rb
 class TodosIndex < PageEz::Page
   has_many_ordered :todos, "ul[data-role=todo-list] li" do
-    has_one :title, "span[data-role=todo-title]"
+    has_one :todo_title, "span[data-role=todo-title]"
     has_one :complete, "input[type=checkbox][data-role=mark-complete]"
 
     def complete?

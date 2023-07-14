@@ -2,39 +2,6 @@ require "capybara/dsl"
 require "active_support/core_ext/class/attribute"
 
 module PageEz
-  module OtherThing
-    def respond_to_missing?(name, include_private = false)
-      puts "respond_to_missing?: #{name}"
-      match = name.match(/has_(.+)\?/)
-      negative_match = name.match(/has_no_(.+)\?/)
-
-      if match && match[1] && macro_registrar.key?(match[1].to_sym)
-        declaration_args = macro_registrar[match[1].to_sym]
-        self.class._has_one(match[1], declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
-        true
-      elsif negative_match && negative_match[1] && macro_registrar.key?(negative_match[1].to_sym)
-        declaration_args = macro_registrar[negative_match[1].to_sym]
-        self.class._has_one(negative_match[1], declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
-        true
-      elsif macro_registrar.key?(name)
-        true
-      else
-        super
-      end
-    end
-
-    def method_missing(*args, **kwargs, &block)
-      puts "method_missing #{args[0]}"
-      if macro_registrar.key?(args[0])
-        declaration_args = macro_registrar[args[0]]
-        self.class._has_one(args[0], declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
-        send(*args, **kwargs, &block)
-      else
-        super
-      end
-    end
-  end
-
   class Page
     include DelegatesTo[:container]
     class_attribute :visitor, :macro_registrar
@@ -52,7 +19,34 @@ module PageEz
       end.new
     end
 
-    include OtherThing
+    def respond_to_missing?(name, include_private = false)
+      match = name.match(/^has_(?<ignore>no_)?(?<element>.+)\?$/)
+
+      if match && match[:element] && macro_registrar.key?(match[:element].to_sym)
+        true
+      elsif macro_registrar.key?(name)
+        true
+      else
+        super
+      end
+    end
+
+    def method_missing(*args, **kwargs, &block)
+      match = args[0].match(/^has_(?<ignore>no_)?(?<element>.+)\?$/)
+
+      if match && match[:element] && macro_registrar.key?(match[:element].to_sym)
+        declaration_args = macro_registrar[match[:element].to_sym]
+        self.class._has_one(match[:element].to_sym, declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
+
+        send(*args, **kwargs, &block)
+      elsif macro_registrar.key?(args[0])
+        declaration_args = macro_registrar[args[0]]
+        self.class._has_one(args[0], declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
+        send(*args, **kwargs, &block)
+      else
+        super
+      end
+    end
 
     def self.has_one(name, *args, **options, &block)
       selector = nil
@@ -93,8 +87,6 @@ module PageEz
       composed_class = obj[:composed_class]
       selector_via_method = obj[:selector_via_method]
       constructor = obj[:constructor]
-
-      puts "block: #{block}"
 
       if selector
         logged_define_method(name) do |*args|
@@ -234,7 +226,6 @@ module PageEz
         Class.new(superclass || self).tap do |klass|
           visitor.begin_block_evaluation
           klass.class_eval(&block)
-          klass.include OtherThing
           visitor.end_block_evaluation
         end
       elsif superclass

@@ -58,8 +58,6 @@ RSpec.describe "has_one", type: :feature do
 
     page.visit "/"
 
-    test_page.section.heading
-
     expect(test_page.section).to have_heading
     expect(test_page.section).to have_description
     expect(test_page.section.heading).to have_content("Section Heading")

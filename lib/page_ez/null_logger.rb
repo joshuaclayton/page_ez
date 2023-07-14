@@ -1,7 +1,6 @@
 module PageEz
   class NullLogger
-    def debug(msg)
-      puts "DEBUG: #{msg}"
+    def debug(*)
     end
 
     def info(*)

@@ -3,7 +3,8 @@ module PageEz
     def self.[](name)
       Module.new do
         define_singleton_method(:included) do |base|
-          base.class_eval %{
+          mod = Module.new
+          mod.class_eval %{
             def method_missing(*args, **kwargs, &block)
               if #{name}.respond_to?(args[0])
                 #{name}.send(*args, **kwargs, &block)
@@ -16,6 +17,8 @@ module PageEz
               #{name}.respond_to?(method_name, include_private) || super(method_name, include_private)
             end
           }, __FILE__, __LINE__ - 12
+
+          base.include(mod)
         end
       end
     end

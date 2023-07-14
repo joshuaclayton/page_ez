@@ -2,11 +2,45 @@ require "capybara/dsl"
 require "active_support/core_ext/class/attribute"
 
 module PageEz
+  module OtherThing
+    def respond_to_missing?(name, include_private = false)
+      puts "respond_to_missing?: #{name}"
+      match = name.match(/has_(.+)\?/)
+      negative_match = name.match(/has_no_(.+)\?/)
+
+      if match && match[1] && macro_registrar.key?(match[1].to_sym)
+        declaration_args = macro_registrar[match[1].to_sym]
+        self.class._has_one(match[1], declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
+        true
+      elsif negative_match && negative_match[1] && macro_registrar.key?(negative_match[1].to_sym)
+        declaration_args = macro_registrar[negative_match[1].to_sym]
+        self.class._has_one(negative_match[1], declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
+        true
+      elsif macro_registrar.key?(name)
+        true
+      else
+        super
+      end
+    end
+
+    def method_missing(*args, **kwargs, &block)
+      puts "method_missing #{args[0]}"
+      if macro_registrar.key?(args[0])
+        declaration_args = macro_registrar[args[0]]
+        self.class._has_one(args[0], declaration_args[0], *declaration_args[1], **declaration_args[2], &declaration_args[3])
+        send(*args, **kwargs, &block)
+      else
+        super
+      end
+    end
+  end
+
   class Page
     include DelegatesTo[:container]
-    class_attribute :visitor
+    class_attribute :visitor, :macro_registrar
 
     self.visitor = PageVisitor.new
+    self.macro_registrar = {}
 
     undef_method :select
 
@@ -17,6 +51,8 @@ module PageEz
         include Capybara::DSL
       end.new
     end
+
+    include OtherThing
 
     def self.has_one(name, *args, **options, &block)
       selector = nil
@@ -33,12 +69,32 @@ module PageEz
       in [1, String] then selector = args.first
       in [1, v] if PageEz.configuration.selector_generators.key?(v) then
         selector = PageEz.configuration.selector_generators[v]
-      in [0, nil] if method_defined?(name) then selector_via_method = true
+      in [0, nil] then selector_via_method = true
       end
 
       visitor.process_macro(:has_one, name, selector)
 
       constructor = constructor_from_block(composed_class, &block)
+
+      obj = {
+        selector: selector,
+        dynamic_options: dynamic_options,
+        composed_class: composed_class,
+        selector_via_method: selector_via_method,
+        constructor: constructor
+      }
+
+      self.macro_registrar = macro_registrar.merge(name => [obj, args, options, block])
+    end
+
+    def self._has_one(name, obj, *args, **options, &block)
+      selector = obj[:selector]
+      dynamic_options = obj[:dynamic_options]
+      composed_class = obj[:composed_class]
+      selector_via_method = obj[:selector_via_method]
+      constructor = obj[:constructor]
+
+      puts "block: #{block}"
 
       if selector
         logged_define_method(name) do |*args|
@@ -69,7 +125,7 @@ module PageEz
         if base_selector
           define_has_one_predicate_methods(name, base_selector, options, dynamic_options)
         end
-      elsif selector_via_method
+      elsif selector_via_method && method_defined?(name)
         alias_method :"_#{name}", name
         undef_method name
 
@@ -87,7 +143,6 @@ module PageEz
         end
 
         define_has_one_predicate_methods(name, selector, options, dynamic_options)
-
       end
     end
 
@@ -179,6 +234,7 @@ module PageEz
         Class.new(superclass || self).tap do |klass|
           visitor.begin_block_evaluation
           klass.class_eval(&block)
+          klass.include OtherThing
           visitor.end_block_evaluation
         end
       elsif superclass

@@ -22,6 +22,7 @@ module PageEz
       selector = nil
       dynamic_options = nil
       composed_class = nil
+      selector_via_method = nil
 
       case [args.length, args.first]
       in [2, v] if PageEz.configuration.selector_generators.key?(v) then
@@ -32,6 +33,7 @@ module PageEz
       in [1, String] then selector = args.first
       in [1, v] if PageEz.configuration.selector_generators.key?(v) then
         selector = PageEz.configuration.selector_generators[v]
+      in [0, nil] if method_defined?(name) then selector_via_method = true
       end
 
       visitor.process_macro(:has_one, name, selector)
@@ -40,7 +42,7 @@ module PageEz
 
       if selector
         logged_define_method(name) do |*args|
-          evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector)
+          evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
 
           HasOneResult.new(
             container: container,
@@ -67,12 +69,31 @@ module PageEz
         if base_selector
           define_has_one_predicate_methods(name, base_selector, options, dynamic_options)
         end
+      elsif selector_via_method
+        alias_method :"_#{name}", name
+        undef_method name
+
+        selector = instance_method(:"_#{name}")
+
+        logged_define_method(name) do |*args|
+          evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
+
+          HasOneResult.new(
+            container: container,
+            selector: evaluator.selector,
+            options: Options.merge(options, dynamic_options, *evaluator.args),
+            constructor: constructor.method(:new)
+          )
+        end
+
+        define_has_one_predicate_methods(name, selector, options, dynamic_options)
+
       end
     end
 
     private_class_method def self.define_has_one_predicate_methods(name, selector, options, dynamic_options)
       logged_define_method("has_#{name}?") do |*args|
-        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector)
+        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
 
         has_css?(
           evaluator.selector,
@@ -81,7 +102,7 @@ module PageEz
       end
 
       logged_define_method("has_no_#{name}?") do |*args|
-        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector)
+        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
 
         has_no_css?(
           evaluator.selector,

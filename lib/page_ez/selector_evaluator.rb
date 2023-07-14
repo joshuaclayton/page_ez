@@ -1,10 +1,14 @@
 module PageEz
   class SelectorEvaluator
-    def initialize(name, args, dynamic_options:, selector:)
+    def initialize(name, args, dynamic_options:, selector:, target:)
       @name = name
       @args = args
       @dynamic_options = dynamic_options
-      @selector = selector
+      @selector = if selector.respond_to?(:bind)
+        selector.bind(target)
+      else
+        selector
+      end
     end
 
     def selector

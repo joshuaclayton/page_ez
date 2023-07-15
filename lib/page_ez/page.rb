@@ -27,6 +27,7 @@ module PageEz
       in [2, _] then selector, dynamic_options = args
       in [1, Class] then composed_class = args.first
       in [1, String] | [1, Symbol] then selector = args.first.to_s
+      in [0, _] then selector = name.to_s
       end
 
       visitor.process_macro(:has_one, name, selector)

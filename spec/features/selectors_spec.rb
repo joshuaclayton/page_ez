@@ -29,6 +29,20 @@ RSpec.describe "Selectors" do
     expect(test_page).to have_heading
   end
 
+  it "uses the element name as a selector when one isn't given" do
+    page = build_page(<<-HTML)
+    <heading>Hello</heading>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :heading
+    end.new(page)
+
+    page.visit "/"
+
+    expect(test_page).to have_heading
+  end
+
   def build_page(markup)
     AppGenerator
       .new

@@ -24,7 +24,7 @@ module PageEz
       composed_class = nil
 
       case [args.length, args.first]
-      in [2, _] then selector, dynamic_options = args
+      in [2, _] then selector, dynamic_options = [args[0].to_s, args[1]]
       in [1, Class] then composed_class = args.first
       in [1, String] | [1, Symbol] then selector = args.first.to_s
       in [0, _] then selector = name.to_s

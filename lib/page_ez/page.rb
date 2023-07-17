@@ -20,117 +20,46 @@ module PageEz
     end
 
     def self.method_added(name)
-      if macro_registrar.key?(name) && !method_defined?(:"_#{name}")
-        _has_one(name, macro_registrar[name][0], *macro_registrar[name][1], **macro_registrar[name][2], &macro_registrar[name][3])
+      if macro_registrar.key?(name)
+        macro_registrar[name].run(self)
       end
     end
 
     def self.has_one(name, *args, **options, &block)
-      selector = nil
-      dynamic_options = nil
-      composed_class = nil
-      dynamic_selector = false
-
-      case [args.length, args.first]
-      in [2, _] then selector, dynamic_options = [args[0].to_s, args[1]]
-      in [1, Class] then composed_class = args.first
-      in [1, String] | [1, Symbol] then selector = args.first.to_s
-      in [0, _] then dynamic_selector = true
+      construction_strategy = case [args.length, args.first]
+      in [2, _] then
+        StaticSelectorWithArgs.new(name, args.first.to_s, args[1], options, &block)
+      in [1, Class] then
+        ComposedClassSelector.new(name, args.first, options, &block)
+      in [1, String] | [1, Symbol] then
+        StaticSelector.new(name, args.first.to_s, options, &block)
+      in [0, _] then
+        DynamicSelector.new(name, options, &block)
       end
 
-      visitor.process_macro(:has_one, name, selector)
+      visitor.process_macro(:has_one, name, construction_strategy.selector)
 
-      constructor = constructor_from_block(composed_class, &block)
+      construction_strategy.run(self)
 
-      payload = {
-        constructor: constructor,
-        dynamic_selector: dynamic_selector,
-        selector: selector,
-        dynamic_options: dynamic_options,
-        composed_class: composed_class
-      }
-
-      _has_one(name, payload, *args, **options, &block)
-      self.macro_registrar = macro_registrar.merge(name => [payload, args, options, block])
+      self.macro_registrar = macro_registrar.merge(name => construction_strategy)
     end
 
-    def self._has_one(name, payload, *args, **options, &block)
-      constructor = payload[:constructor]
-      dynamic_selector = payload[:dynamic_selector]
-      selector = payload[:selector]
-      dynamic_options = payload[:dynamic_options]
-      composed_class = payload[:composed_class]
-
-      if selector
-        logged_define_method(name) do |*args|
-          evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
-
-          HasOneResult.new(
-            container: container,
-            selector: evaluator.selector,
-            options: Options.merge(options, dynamic_options, *evaluator.args),
-            constructor: constructor.method(:new)
-          )
-        end
-
-        define_has_one_predicate_methods(name, selector, options, dynamic_options)
-      elsif composed_class
-        base_selector = options.delete(:base_selector)
-
-        logged_define_method(name) do |*args|
-          container = if base_selector
-            find(base_selector)
-          else
-            self
-          end
-
-          constructor.new(container)
-        end
-
-        if base_selector
-          define_has_one_predicate_methods(name, base_selector, options, dynamic_options)
-        end
-      elsif dynamic_selector
-        if method_defined?(name)
-          alias_method :"_#{name}", name
-          undef_method name
-
-          selector = instance_method(:"_#{name}")
-        else
-          selector = name.to_s
-        end
-
-        logged_define_method(name) do |*args|
-          evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
-
-          HasOneResult.new(
-            container: container,
-            selector: evaluator.selector,
-            options: Options.merge(options, dynamic_options, *evaluator.args),
-            constructor: constructor.method(:new)
-          )
-        end
-
-        define_has_one_predicate_methods(name, selector, options, dynamic_options)
-      end
-    end
-
-    private_class_method def self.define_has_one_predicate_methods(name, selector, options, dynamic_options)
-      logged_define_method("has_#{name}?") do |*args|
-        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
+    def self.define_has_one_predicate_methods(evaluator_class)
+      logged_define_method("has_#{evaluator_class.name}?") do |*args|
+        evaluator = evaluator_class.run(args, target: self)
 
         has_css?(
           evaluator.selector,
-          **Options.merge(options, dynamic_options, *evaluator.args)
+          **evaluator.options
         )
       end
 
-      logged_define_method("has_no_#{name}?") do |*args|
-        evaluator = SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, selector: selector, target: self)
+      logged_define_method("has_no_#{evaluator_class.name}?") do |*args|
+        evaluator = evaluator_class.run(args, target: self)
 
         has_no_css?(
           evaluator.selector,
-          **Options.merge(options, dynamic_options, *evaluator.args)
+          **evaluator.options
         )
       end
     end
@@ -198,7 +127,7 @@ module PageEz
       visitor.inherit_from(subclass)
     end
 
-    private_class_method def self.constructor_from_block(superclass = nil, &block)
+    def self.constructor_from_block(superclass = nil, &block)
       if block
         Class.new(superclass || self).tap do |klass|
           visitor.begin_block_evaluation
@@ -216,9 +145,128 @@ module PageEz
       end
     end
 
-    private_class_method def self.logged_define_method(name, &block)
+    def self.logged_define_method(name, &block)
       visitor.define_method(name)
       define_method(name, &block)
+    end
+
+    class StaticSelector
+      def initialize(name, selector, options, &block)
+        @decorated = StaticSelectorWithArgs.new(name, selector, nil, options, &block)
+      end
+
+      def selector
+        @decorated.selector
+      end
+
+      def run(target)
+        @decorated.run(target)
+      end
+    end
+
+    class StaticSelectorWithArgs
+      attr_reader :selector
+
+      def initialize(name, selector, dynamic_options, options, &block)
+        @name = name
+        @selector = selector
+        @dynamic_options = dynamic_options
+        @options = options
+        @block = block
+      end
+
+      def run(target)
+        options = @options
+        dynamic_options = @dynamic_options
+        name = @name
+        selector = @selector
+        constructor = target.constructor_from_block(nil, &@block)
+        evaluator_class = SelectorEvaluator.build(name, dynamic_options: dynamic_options, options: options, selector: selector)
+
+        target.logged_define_method(name) do |*args|
+          evaluator = evaluator_class.run(args, target: self)
+
+          HasOneResult.new(
+            container: container,
+            selector: evaluator.selector,
+            options: evaluator.options,
+            constructor: constructor.method(:new)
+          )
+        end
+
+        target.define_has_one_predicate_methods(evaluator_class)
+      end
+    end
+
+    class DynamicSelector
+      attr_reader :selector
+
+      def initialize(name, options, &block)
+        @run = false
+        @name = name
+        @options = options
+        @block = block
+      end
+
+      def run(target)
+        return if run?
+
+        if target.method_defined?(@name)
+          target.alias_method :"_#{@name}", @name
+          target.undef_method @name
+          @run = true
+
+          selector = target.instance_method(:"_#{@name}")
+        else
+          selector = @name.to_s
+        end
+
+        StaticSelectorWithArgs.new(@name, selector, nil, @options, &@block).run(target)
+      end
+
+      private
+
+      def run?
+        @run
+      end
+    end
+
+    class ComposedClassSelector
+      attr_reader :selector
+
+      def initialize(name, composed_class, options, &block)
+        @name = name
+        @composed_class = composed_class
+        @options = options
+        @block = block
+      end
+
+      def run(target)
+        constructor = target.constructor_from_block(@composed_class, &@block)
+
+        base_selector = @options.delete(:base_selector)
+
+        target.logged_define_method(@name) do |*args|
+          container = if base_selector
+            find(base_selector)
+          else
+            self
+          end
+
+          constructor.new(container)
+        end
+
+        if base_selector
+          target.define_has_one_predicate_methods(
+            SelectorEvaluator.build(
+              @name,
+              dynamic_options: nil,
+              options: @options,
+              selector: base_selector
+            )
+          )
+        end
+      end
     end
   end
 end

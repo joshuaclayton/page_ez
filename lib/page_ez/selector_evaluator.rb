@@ -1,9 +1,23 @@
 module PageEz
   class SelectorEvaluator
-    def initialize(name, args, dynamic_options:, selector:, target:)
+    def self.build(name, dynamic_options:, options:, selector:)
+      run_def = ->(args, target:) do
+        PageEz::SelectorEvaluator.new(name, args, dynamic_options: dynamic_options, options: options, selector: selector, target: target)
+      end
+
+      name_def = -> { name }
+
+      Class.new.tap do |klass|
+        klass.define_singleton_method(:run, &run_def)
+        klass.define_singleton_method(:name, &name_def)
+      end
+    end
+
+    def initialize(name, args, dynamic_options:, options:, selector:, target:)
       @name = name
       @args = args
       @dynamic_options = dynamic_options
+      @options = options
       @selector = if selector.respond_to?(:bind)
         selector.bind(target)
       else
@@ -29,6 +43,12 @@ module PageEz
       end
     end
 
+    def options
+      Options.merge(@options, @dynamic_options, *args)
+    end
+
+    private
+
     def args
       if @args.any? && kwargs.any?
         cloned_args = @args.dup
@@ -38,8 +58,6 @@ module PageEz
         @args
       end
     end
-
-    private
 
     def dynamic_selector?
       @selector.respond_to?(:parameters) && @selector.respond_to?(:call)

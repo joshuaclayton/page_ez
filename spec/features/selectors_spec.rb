@@ -12,6 +12,7 @@ RSpec.describe "Selectors" do
 
     page.visit "/"
 
+    expect(test_page.heading).to have_text("Hello")
     expect(test_page).to have_heading
   end
 

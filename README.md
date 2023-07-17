@@ -129,6 +129,47 @@ todos_index.todo_at(0).complete.click
 expect(todos_index.todo_at(0)).to be_complete
 ```
 
+### Using Methods as Dynamic Selectors
+
+In the examples above, the CSS selectors are static.
+
+However, there are a few different ways to define `has_one` elements as dynamic.
+
+```rb
+class TodosIndex < PageEz::Page
+  has_one :todo_by_id
+
+  def todo_by_id(id:)
+    "[data-model=todo][data-model-id=#{id}]"
+  end
+end
+```
+
+The first mechanism declares the `has_one :todo_by_id` at the top of the file,
+and the definition for the selector later on. This allows for grouping multiple
+`has_one`s together for readability.
+
+The second approach syntactically mirrors Ruby's `private_class_method`:
+
+```rb
+class TodosIndex < PageEz::Page
+  has_one def todo_by_id(id:)
+    "[data-model=todo][data-model-id=#{id}]"
+  end
+
+  # or
+
+  def todo_by_id(id:)
+    "[data-model=todo][data-model-id=#{id}]"
+  end
+  has_one :todo_by_id
+end
+```
+
+In either case, the method needs to return a CSS string. PageEz will generate
+the corresponding predicate methods as expected, as well (in the example above,
+`#has_todo_by_id?(id:)` and `#has_no_todo_by_id?(id:)`
+
 While the gem is under active development and the APIs are being determined,
 it's best to review the feature specs to understand how to use the gem.
 

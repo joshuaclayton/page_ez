@@ -17,6 +17,7 @@ RSpec.describe "Smoke spec", type: :feature do
 
     hello_page = hello_page.new(page)
 
+    expect(hello_page.has_heading?).to be true
     expect(hello_page).to have_heading
     expect(hello_page.heading.text).to eq("Hello, world!")
     expect(hello_page).to have_title("Application Title")

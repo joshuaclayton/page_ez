@@ -11,7 +11,14 @@ end
 SimpleCov.start do
   add_filter "spec/"
 
-  formatter SimpleCov::Formatter::LcovFormatter
+  if ENV["CI"]
+    formatter SimpleCov::Formatter::LcovFormatter
+  else
+    formatter SimpleCov::Formatter::MultiFormatter.new([
+      SimpleCov::Formatter::SimpleFormatter,
+      SimpleCov::Formatter::HTMLFormatter
+    ])
+  end
 end
 
 require "page_ez"

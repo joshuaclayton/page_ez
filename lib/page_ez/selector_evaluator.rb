@@ -27,16 +27,10 @@ module PageEz
 
     def selector
       if dynamic_selector?
-        args = []
-
-        if @selector.parameters.first[0] == :opt
-          args << @name
-        end
-
         if selector_kwargs.any?
-          @selector.call(*args, **kwargs.slice(*selector_kwargs))
+          @selector.call(**kwargs.slice(*selector_kwargs))
         else
-          @selector.call(*args)
+          @selector.call(*args[0..selector_args.length - 1])
         end
       else
         @selector
@@ -44,7 +38,7 @@ module PageEz
     end
 
     def options
-      Options.merge(@options, @dynamic_options, *args)
+      Options.merge(@options, @dynamic_options, *args[selector_args.length..])
     end
 
     private
@@ -69,6 +63,10 @@ module PageEz
 
     def selector_kwargs
       Parameters.build(@selector).keyword_args
+    end
+
+    def selector_args
+      Parameters.build(@selector).non_keyword_args
     end
 
     def kwargs

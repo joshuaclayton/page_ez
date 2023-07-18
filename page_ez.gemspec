@@ -38,4 +38,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "selenium-webdriver", "~> 4.10"
   spec.add_development_dependency "puma", "~> 6.3"
   spec.add_development_dependency "launchy", "~> 2.5"
+  spec.add_development_dependency "simplecov", "~> 0.22"
+  spec.add_development_dependency "simplecov-lcov", "~> 0.8"
 end

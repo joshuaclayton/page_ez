@@ -1,5 +1,7 @@
 # PageEz
 
+[![Coverage Status](https://coveralls.io/repos/github/joshuaclayton/page_ez/badge.svg?branch=main)](https://coveralls.io/github/joshuaclayton/page_ez?branch=main)
+
 PageEz is a tool to define page objects with [Capybara].
 
 [Capybara]: https://github.com/teamcapybara/capybara

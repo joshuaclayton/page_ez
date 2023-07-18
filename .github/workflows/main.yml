@@ -27,3 +27,10 @@ jobs:
         bundler-cache: true
     - name: Run the default task
       run: bundle exec rake
+    - name: Coveralls
+      uses: coverallsapp/github-action@v2
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: SimpleCov Coverage
+        path: coverage/

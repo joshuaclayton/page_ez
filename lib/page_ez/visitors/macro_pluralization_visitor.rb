@@ -21,9 +21,9 @@ module PageEz
         @depth_visitor.inherit_from(subclass)
       end
 
-      def process_macro(macro, name, selector)
-        @depth_visitor.process_macro(macro, name, selector)
-        rendered = "#{macro} :#{name}, \"#{selector}\""
+      def process_macro(macro, name, construction_strategy)
+        @depth_visitor.process_macro(macro, name, construction_strategy)
+        rendered = "#{macro} :#{name}, \"#{construction_strategy.selector}\""
 
         message = case [macro, Pluralization.new(name).singular? ? :singular : :plural]
         in [:has_one, :plural]

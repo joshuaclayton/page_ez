@@ -21,7 +21,7 @@ module PageEz
       def inherit_from(subclass)
       end
 
-      def process_macro(macro, name, selector)
+      def process_macro(*)
       end
 
       def reset

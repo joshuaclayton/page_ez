@@ -21,10 +21,10 @@ module PageEz
         @depth_visitor.inherit_from(subclass)
       end
 
-      def process_macro(macro, name, selector)
-        @depth_visitor.process_macro(macro, name, selector)
+      def process_macro(macro, name, construction_strategy)
+        @depth_visitor.process_macro(macro, name, construction_strategy)
         if existing_matchers.include?(name.to_s)
-          rendered_macro = "#{macro} :#{name}, \"#{selector}\""
+          rendered_macro = "#{macro} :#{name}, \"#{construction_strategy.selector}\""
           whitespace = "  " * @depth_visitor.depth
           message = "#{whitespace}#{rendered_macro} will conflict with Capybara's `have_#{name}` matcher"
 

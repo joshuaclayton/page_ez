@@ -23,9 +23,9 @@ module PageEz
         debug("Declaring page object: #{subclass.name || "{anonymous page object}"}")
       end
 
-      def process_macro(macro, name, selector)
-        @depth_visitor.process_macro(macro, name, selector)
-        debug("#{macro} :#{name}, \"#{selector}\"")
+      def process_macro(macro, name, construction_strategy)
+        @depth_visitor.process_macro(macro, name, construction_strategy)
+        debug("#{macro} :#{name}, \"#{construction_strategy.selector}\"")
       end
 
       def reset

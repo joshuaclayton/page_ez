@@ -33,9 +33,9 @@ module PageEz
       end
     end
 
-    def process_macro(macro, name, selector)
+    def process_macro(macro, name, construction_strategy)
       @visitors.each do |visitor|
-        visitor.process_macro(macro, name, selector)
+        visitor.process_macro(macro, name, construction_strategy)
       end
     end
 

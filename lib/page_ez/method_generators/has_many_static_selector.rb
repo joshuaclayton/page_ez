@@ -1,6 +1,8 @@
 module PageEz
   module MethodGenerators
     class HasManyStaticSelector
+      attr_reader :selector
+
       def initialize(name, selector, dynamic_options, options, &block)
         @name = name
         @selector = selector

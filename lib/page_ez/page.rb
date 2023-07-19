@@ -37,7 +37,7 @@ module PageEz
         MethodGenerators::HasOneDynamicSelector.new(name, options, &block)
       end
 
-      visitor.process_macro(:has_one, name, construction_strategy.selector)
+      visitor.process_macro(:has_one, name, construction_strategy)
 
       construction_strategy.run(self)
 
@@ -45,15 +45,19 @@ module PageEz
     end
 
     def self.has_many(name, selector, dynamic_options = nil, **options, &block)
-      visitor.process_macro(:has_many, name, selector)
+      construction_strategy = MethodGenerators::HasManyStaticSelector.new(name, selector, dynamic_options, options, &block)
 
-      MethodGenerators::HasManyStaticSelector.new(name, selector, dynamic_options, options, &block).run(self)
+      visitor.process_macro(:has_many, name, construction_strategy)
+
+      construction_strategy.run(self)
     end
 
     def self.has_many_ordered(name, selector, dynamic_options = nil, **options, &block)
-      visitor.process_macro(:has_many_ordered, name, selector)
+      construction_strategy = MethodGenerators::HasManyOrderedSelector.new(name, selector, dynamic_options, options, &block)
 
-      MethodGenerators::HasManyOrderedSelector.new(name, selector, dynamic_options, options, &block).run(self)
+      visitor.process_macro(:has_many_ordered, name, construction_strategy)
+
+      construction_strategy.run(self)
     end
 
     def self.inherited(subclass)

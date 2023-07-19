@@ -20,9 +20,21 @@ module PageEz
     end
 
     def self.method_added(name)
+      visitor.track_method_added(name, macro_registrar[name])
+
       if macro_registrar.key?(name)
         macro_registrar[name].run(self)
       end
+    end
+
+    def self.method_undefined(name)
+      visitor.track_method_undefined(name)
+    end
+
+    def self.rename_method(from:, to:)
+      alias_method to, from
+      undef_method from
+      visitor.track_method_renamed(from, to)
     end
 
     def self.has_one(name, *args, **options, &block)

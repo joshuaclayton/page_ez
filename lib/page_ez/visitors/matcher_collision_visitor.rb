@@ -21,6 +21,18 @@ module PageEz
         @depth_visitor.inherit_from(subclass)
       end
 
+      def track_method_added(name, construction_strategy)
+        @depth_visitor.track_method_added(name, construction_strategy)
+      end
+
+      def track_method_undefined(name)
+        @depth_visitor.track_method_undefined(name)
+      end
+
+      def track_method_renamed(from, to)
+        @depth_visitor.track_method_renamed(from, to)
+      end
+
       def process_macro(macro, name, construction_strategy)
         @depth_visitor.process_macro(macro, name, construction_strategy)
         if existing_matchers.include?(name.to_s)

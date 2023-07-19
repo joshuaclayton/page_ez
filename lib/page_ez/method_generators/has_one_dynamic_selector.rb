@@ -14,8 +14,7 @@ module PageEz
         return if run?
 
         if target.method_defined?(@name)
-          target.alias_method :"_#{@name}", @name
-          target.undef_method @name
+          target.rename_method from: @name, to: :"_#{@name}"
           @run = true
 
           @selector = target.instance_method(:"_#{@name}")

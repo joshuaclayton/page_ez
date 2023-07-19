@@ -23,6 +23,18 @@ module PageEz
         debug("Declaring page object: #{subclass.name || "{anonymous page object}"}")
       end
 
+      def track_method_added(name, construction_strategy)
+        @depth_visitor.track_method_added(name, construction_strategy)
+      end
+
+      def track_method_undefined(name)
+        @depth_visitor.track_method_undefined(name)
+      end
+
+      def track_method_renamed(from, to)
+        @depth_visitor.track_method_renamed(from, to)
+      end
+
       def process_macro(macro, name, construction_strategy)
         @depth_visitor.process_macro(macro, name, construction_strategy)
         debug("#{macro} :#{name}, \"#{construction_strategy.selector}\"")

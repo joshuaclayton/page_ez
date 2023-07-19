@@ -33,6 +33,24 @@ module PageEz
       end
     end
 
+    def track_method_added(name, construction_strategy)
+      @visitors.each do |visitor|
+        visitor.track_method_added(name, construction_strategy)
+      end
+    end
+
+    def track_method_undefined(name)
+      @visitors.each do |visitor|
+        visitor.track_method_undefined(name)
+      end
+    end
+
+    def track_method_renamed(from, to)
+      @visitors.each do |visitor|
+        visitor.track_method_renamed(from, to)
+      end
+    end
+
     def process_macro(macro, name, construction_strategy)
       @visitors.each do |visitor|
         visitor.process_macro(macro, name, construction_strategy)

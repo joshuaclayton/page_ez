@@ -21,6 +21,15 @@ module PageEz
       def inherit_from(subclass)
       end
 
+      def track_method_added(*)
+      end
+
+      def track_method_undefined(*)
+      end
+
+      def track_method_renamed(*)
+      end
+
       def process_macro(*)
       end
 

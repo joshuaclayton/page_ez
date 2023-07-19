@@ -40,5 +40,107 @@ RSpec.describe "Smoke spec", type: :feature do
         has_many :list, "ul li"
       end
     end.to raise_error(PageEz::DuplicateElementDeclarationError, /list/)
+
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :heading
+        has_one :heading
+      end
+    end.to raise_error(PageEz::DuplicateElementDeclarationError, /heading/)
+
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :heading, "heading" do
+          has_many :list_items, "li"
+          has_many :list_items, "li"
+        end
+      end
+    end.to raise_error(PageEz::DuplicateElementDeclarationError, /list_items/)
+  end
+
+  it "raises when a macro is run against a symbol and then a method is defined again" do
+    expect do
+      Class.new(PageEz::Page) do
+        has_one def thing
+          "heading"
+        end
+
+        def thing
+          "h1"
+        end
+      end
+    end.to raise_error(PageEz::DuplicateElementDeclarationError, /thing/)
+  end
+
+  it "raises when a macro is run against a symbol and then a method is defined again in a nested context" do
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :parent do
+          has_one def thing
+            "h2"
+          end
+
+          def thing
+            "overridden"
+          end
+        end
+      end
+    end.to raise_error(PageEz::DuplicateElementDeclarationError, /thing/)
+  end
+
+  it "raises when a macro is run against a static selector and then a method is defined again" do
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :thing, "h3"
+
+        def thing
+          "overridden"
+        end
+      end
+    end.to raise_error(PageEz::DuplicateElementDeclarationError, /thing/)
+  end
+
+  it "allows nested macros to share the same name" do
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :heading, "heading" do
+          has_one :heading, "h3"
+        end
+      end
+    end.not_to raise_error
+
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :first_section, "section.first" do
+          has_one :heading
+        end
+
+        has_one :second_section, "section.second" do
+          has_one :heading
+        end
+      end
+    end.not_to raise_error
+
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :parent do
+          has_one :thing
+
+          def thing
+            "h3"
+          end
+        end
+      end
+    end.not_to raise_error
+
+    expect do
+      Class.new(PageEz::Page) do
+        has_one :thing
+
+        def thing
+          "h3"
+        end
+      end
+    end.not_to raise_error
   end
 end

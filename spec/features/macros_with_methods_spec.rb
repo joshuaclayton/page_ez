@@ -4,16 +4,18 @@ RSpec.describe "Macros with methods" do
   it "calls the method with the appropriate arguments" do
     page = build_page(<<-HTML)
     <section data-id="1">
-      Section 1
+      <heading>Section 1</heading>
     </section>
 
     <section data-id="2">
-      Section 2
+      <heading>Section 2</heading>
     </section>
     HTML
 
     test_page = Class.new(PageEz::Page) do
-      has_one :section_with_id
+      has_one :section_with_id do
+        has_one :heading
+      end
 
       def section_with_id(id:)
         "section[data-id='#{id}']"
@@ -23,6 +25,8 @@ RSpec.describe "Macros with methods" do
     page.visit "/"
 
     expect(test_page.section_with_id(id: 1)).to have_text("Section 1")
+    expect(test_page.section_with_id(id: 1)).to have_heading
+    expect(test_page.section_with_id(id: 1)).to have_heading(text: "Section 1")
     expect(test_page).to have_section_with_id(id: 1)
     expect(test_page).to have_section_with_id(id: 1, text: "Section 1")
     expect(test_page).to have_section_with_id(id: 2, text: "Section 2")

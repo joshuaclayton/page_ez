@@ -27,10 +27,10 @@ module PageEz
 
     def selector
       if dynamic_selector?
-        if selector_kwargs.any?
+        if selector_args.none?
           @selector.call(**kwargs.slice(*selector_kwargs))
         else
-          @selector.call(*args[0..selector_args.length - 1])
+          @selector.call(*args[0..selector_args.length - 1], **kwargs.slice(*selector_kwargs))
         end
       else
         @selector

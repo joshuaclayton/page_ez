@@ -1,6 +1,56 @@
 require "spec_helper"
 
 RSpec.describe "has_many_ordered", type: :feature do
+  it "allows for nested elements with the same name" do
+    page = build_page(<<-HTML)
+    <main>
+      <header>
+        <h2>Received Webhooks</h2>
+      </header>
+      <section>
+        <ul data-role="webhooks-list">
+          <li>
+            <div data-role="webhook-header">
+              <div>
+                <div data-role="webhook-source">Recurly</div>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div data-role="webhook-header">
+              <div>
+                <div data-role="webhook-source">Google</div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </main>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :header do
+        has_one :heading, "h2"
+      end
+
+      has_many_ordered :webhooks, "ul[data-role=webhooks-list] li" do
+        # has_one :webhook_header, "div[data-role=webhook-header]" do
+        has_one :header, "div[data-role=webhook-header]" do
+          has_one :source, "div[data-role=webhook-source]"
+        end
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    expect(test_page).to have_header
+    expect(test_page.header).to have_heading(text: "Received Webhooks")
+    expect(test_page.webhook_at(0)).to have_header
+    # expect(test_page.webhook_at(0)).to have_webhook_header
+    expect(test_page.webhook_at(0).header).to have_source
+    # expect(test_page.webhook_at(0).webhook_header).to have_source
+  end
+
   it "allows for selection at an index" do
     page = build_page(<<-HTML)
     <template id="item">

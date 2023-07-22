@@ -8,4 +8,12 @@ RSpec.describe PageEz::Configuration do
       end
     end.to raise_error(ArgumentError, ":invalid must be one of [:warn, :raise, nil]")
   end
+
+  it "disallows invalid values for on_matcher_collision" do
+    expect do
+      PageEz.configure do |config|
+        config.on_matcher_collision = :invalid
+      end
+    end.to raise_error(ArgumentError, ":invalid must be one of [:warn, :raise, nil]")
+  end
 end

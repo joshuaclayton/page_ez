@@ -56,20 +56,38 @@ module PageEz
       self.macro_registrar = macro_registrar.merge(name => construction_strategy)
     end
 
-    def self.has_many(name, selector, dynamic_options = nil, **options, &block)
-      construction_strategy = MethodGenerators::HasManyStaticSelector.new(name, selector, dynamic_options, options, &block)
+    def self.has_many(name, *args, **options, &block)
+      construction_strategy = case [args.length, args.first]
+      in [2, _] then
+        MethodGenerators::HasManyStaticSelector.new(name, args.first.to_s, args[1], options, &block)
+      in [1, String] | [1, Symbol] then
+        MethodGenerators::HasManyStaticSelector.new(name, args.first.to_s, nil, options, &block)
+      in [0, _] then
+        MethodGenerators::HasManyDynamicSelector.new(name, options, &block)
+      end
 
       visitor.process_macro(:has_many, name, construction_strategy)
 
       construction_strategy.run(self)
+
+      self.macro_registrar = macro_registrar.merge(name => construction_strategy)
     end
 
-    def self.has_many_ordered(name, selector, dynamic_options = nil, **options, &block)
-      construction_strategy = MethodGenerators::HasManyOrderedSelector.new(name, selector, dynamic_options, options, &block)
+    def self.has_many_ordered(name, *args, **options, &block)
+      construction_strategy = case [args.length, args.first]
+      in [2, _] then
+        MethodGenerators::HasManyOrderedSelector.new(name, args.first.to_s, args[1], options, &block)
+      in [1, String] | [1, Symbol] then
+        MethodGenerators::HasManyOrderedSelector.new(name, args.first.to_s, nil, options, &block)
+      in [0, _] then
+        MethodGenerators::HasManyOrderedDynamicSelector.new(name, options, &block)
+      end
 
       visitor.process_macro(:has_many_ordered, name, construction_strategy)
 
       construction_strategy.run(self)
+
+      self.macro_registrar = macro_registrar.merge(name => construction_strategy)
     end
 
     def self.inherited(subclass)

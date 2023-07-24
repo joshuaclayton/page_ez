@@ -133,7 +133,8 @@ expect(todos_index.todo_at(0)).to be_complete
 
 In the examples above, the CSS selectors are static.
 
-However, there are a few different ways to define `has_one` elements as dynamic.
+However, there are a few different ways to define `has_one`, `has_many`, and
+`has_many_ordered` elements as dynamic.
 
 ```rb
 class TodosIndex < PageEz::Page
@@ -169,6 +170,39 @@ end
 In either case, the method needs to return a CSS string. PageEz will generate
 the corresponding predicate methods as expected, as well (in the example above,
 `#has_todo_by_id?(id:)` and `#has_no_todo_by_id?(id:)`
+
+For the additional methods generated with the `has_many_ordered` macro (e.g.
+for `has_many_ordered :items`, the methods `#item_at` and `#has_item_at?`), the
+first argument is the index of the element, and all other args will be passed
+through.
+
+```rb
+class TodosList < PageEz::Page
+  has_many_ordered :items do
+    has_one :name, "[data-role='title']"
+    has_one :checkbox, "input[type='checkbox']"
+  end
+
+  def items(state:)
+    "li[data-state='#{state}']"
+  end
+end
+```
+
+This would enable usage as follows:
+
+```rb
+todos = TodosList.new
+
+expect(todos.items(state: "complete")).to have_count_of(1)
+expect(todos.items(state: "incomplete")).to have_count_of(2)
+
+expect(todos).to have_item_at(0, state: "complete")
+expect(todos).not_to have_item_at(1, state: "complete")
+expect(todos).to have_item_at(0, state: "incomplete")
+expect(todos).to have_item_at(1, state: "incomplete")
+expect(todos).not_to have_item_at(2, state: "incomplete")
+```
 
 While the gem is under active development and the APIs are being determined,
 it's best to review the feature specs to understand how to use the gem.

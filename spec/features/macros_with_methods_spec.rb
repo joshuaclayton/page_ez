@@ -85,6 +85,88 @@ RSpec.describe "Macros with methods" do
     expect(test_page).to have_no_element_with_id("div", id: 1, text: "Section 1")
   end
 
+  it "allows for use with has_many_ordered" do
+    page = build_page(<<-HTML)
+    <ul>
+      <li data-state="complete">
+        <input type="checkbox" name="todos[1]" data-action="mark-incomplete" checked>
+        <span data-role="title">Buy milk</span>
+      </li>
+      <li data-state="incomplete">
+        <input type="checkbox" name="todos[2]" data-action="mark-complete">
+        <span data-role="title">Buy eggs</span>
+      </li>
+      <li data-state="incomplete">
+        <input type="checkbox" name="todos[3]" data-action="mark-complete">
+        <span data-role="title">Buy onions</span>
+      </li>
+    </ul>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_many_ordered :items do
+        has_one :name, "[data-role='title']"
+        has_one :checkbox, "input[type='checkbox']"
+      end
+
+      def items(state:)
+        "li[data-state='#{state}']"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    expect(test_page.items(state: "complete")).to have_count_of(1)
+    expect(test_page.items(state: "incomplete")).to have_count_of(2)
+    expect(test_page).to have_item_at(0, state: "complete")
+    expect(test_page).not_to have_item_at(1, state: "complete")
+    expect(test_page).to have_item_at(0, state: "incomplete")
+    expect(test_page).to have_item_at(1, state: "incomplete")
+    expect(test_page).not_to have_item_at(2, state: "incomplete")
+    expect(test_page.item_at(0, state: "complete")).to have_name(text: "Buy milk")
+    expect(test_page.item_at(0, state: "complete").checkbox).to be_checked
+    expect(test_page.item_at(0, state: "incomplete")).to have_name(text: "Buy eggs")
+    expect(test_page.item_at(1, state: "incomplete")).to have_name(text: "Buy onions")
+  end
+
+  it "allows for use with has_many" do
+    page = build_page(<<-HTML)
+    <ul>
+      <li data-state="complete">
+        <input type="checkbox" name="todos[1]" data-action="mark-incomplete" checked>
+        <span data-role="title">Buy milk</span>
+      </li>
+      <li data-state="incomplete">
+        <input type="checkbox" name="todos[2]" data-action="mark-complete">
+        <span data-role="title">Buy eggs</span>
+      </li>
+      <li data-state="incomplete">
+        <input type="checkbox" name="todos[3]" data-action="mark-complete">
+        <span data-role="title">Buy onions</span>
+      </li>
+    </ul>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_many :items do
+        has_one :name, "[data-role='title']"
+        has_one :checkbox, "input[type='checkbox']"
+      end
+
+      def items(state:)
+        "li[data-state='#{state}']"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    expect(test_page.items(state: "complete")).to have_count_of(1)
+    expect(test_page.items(state: "incomplete")).to have_count_of(2)
+    expect(test_page.items(state: "complete").first.name).to have_text("Buy milk")
+    expect(test_page.items(state: "incomplete").first.name).to have_text("Buy eggs")
+    expect(test_page.items(state: "incomplete")[1].name).to have_text("Buy onions")
+  end
+
   def build_page(markup)
     AppGenerator
       .new

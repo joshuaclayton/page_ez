@@ -142,6 +142,40 @@ RSpec.describe "has_many_ordered", type: :feature do
     end
   end
 
+  it "allows for dynamic options" do
+    page = build_page(<<-HTML)
+    <ul>
+      <li>List of 3 Items</li>
+      <li>2nd item</li>
+      <li>3rd item</li>
+    </ul>
+
+    <ul>
+      <li>List of 3 Items</li>
+      <li>2nd item</li>
+      <li>3rd item</li>
+    </ul>
+
+    <ul>
+      <li>List of 2 Items</li>
+      <li>2nd item</li>
+    </ul>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_many_ordered :lists, "ul", ->(name:) { {text: name} } do
+        has_many :items, "li"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    expect(test_page.list_at(0, name: "List of 3 Items").items).to have_count_of(3)
+    expect(test_page.list_at(1, name: "List of 3 Items").items).to have_count_of(3)
+    expect(test_page.list_at(2, name: "List of 2 Items").items).to have_count_of(2)
+    expect(test_page).not_to have_list_at(2, name: "List of 3 Items")
+  end
+
   def build_page(markup)
     AppGenerator
       .new

@@ -37,6 +37,10 @@ module PageEz
 
         constructor
       end
+
+      def selector_type
+        :static
+      end
     end
   end
 end

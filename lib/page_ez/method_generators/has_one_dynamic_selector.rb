@@ -25,6 +25,10 @@ module PageEz
         HasOneStaticSelector.new(@name, @selector, nil, @options, &@block).run(target)
       end
 
+      def selector_type
+        :dynamic
+      end
+
       private
 
       def run?

@@ -46,6 +46,10 @@ module PageEz
           )
         end
       end
+
+      def selector_type
+        @base_selector.selector_type
+      end
     end
   end
 end

@@ -32,7 +32,7 @@ module PageEz
 
         found = @declared_constructors[parent_id].find { _1 == [name, construction_strategy] }
 
-        if found && !found[1].is_a?(PageEz::MethodGenerators::HasOneDynamicSelector)
+        if found && found[1]&.selector_type != :dynamic
           raise DuplicateElementDeclarationError, "duplicate element :#{name} declared"
         end
 

@@ -32,6 +32,10 @@ module PageEz
 
         HasOnePredicateMethods.new(evaluator_class).run(target)
       end
+
+      def selector_type
+        :static
+      end
     end
   end
 end

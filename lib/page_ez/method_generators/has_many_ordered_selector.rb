@@ -13,8 +13,7 @@ module PageEz
       end
 
       def run(target)
-        selector = @selector
-        build_selector = ->(index) do
+        build_selector = ->(selector, index) do
           # nth-of-type indices are 1-indexed rather than 0-indexed, so we add 1
           # to allow developers to still think 'in Ruby' when using this method
           "#{selector}:nth-of-type(#{index + 1})"
@@ -26,23 +25,23 @@ module PageEz
         dynamic_options = @dynamic_options
         constructor = @base_selector.run(target)
 
-        evaluator_class = SelectorEvaluator.build(@name, dynamic_options: dynamic_options, options: options, selector: build_selector)
+        evaluator_class = SelectorEvaluator.build(@name, dynamic_options: dynamic_options, options: options, selector: selector)
 
         target.logged_define_method("#{singularized_name}_at") do |index, *args|
-          evaluator = evaluator_class.run([index].dup.push(*args), target: self)
+          evaluator = evaluator_class.run(args, target: self)
           HasOneResult.new(
             container: container,
-            selector: evaluator.selector,
+            selector: build_selector[evaluator.selector, index],
             options: evaluator.options,
             constructor: constructor.method(:new)
           )
         end
 
         target.logged_define_method("has_#{singularized_name}_at?") do |index, *args|
-          evaluator = evaluator_class.run([index].dup.push(*args), target: self)
+          evaluator = evaluator_class.run(args, target: self)
 
           has_css?(
-            evaluator.selector,
+            build_selector[evaluator.selector, index],
             **evaluator.options
           )
         end

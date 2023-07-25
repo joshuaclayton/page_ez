@@ -373,20 +373,21 @@ git commits and the created tag, and push the `.gem` file to
 ## Feature Tests
 
 This uses a test harness for Rack app generation called `AppGenerator`, which
-handles mounting HTML responses to endpoints accessible via `GET`.
+handles mounting HTML responses to endpoints accessible via `GET`. In tests,
+call `build_page` with the markup you'd like and it will mount that response to
+the root of the application.
 
 ```ruby
-def page
-  @app ||= AppGenerator
-    .new
-    .route("/", "Hello, strange!")
-    .route("/hello", "<h1>Hello, world!</h1>")
-    .run
-end
+page = build_page(<<-HTML)
+  <form>
+    <input name="name" type="text" />
+    <input name="email" type="text" />
+  </form>
+HTML
 ```
 
-To run tests, either define `page` (via `def page` or RSpec's `let`) to allow
-for standard Capybara interaction within tests.
+To drive interactions with a headless browser, add the RSpec metadata `:js` to
+either individual `it`s or `describe`s.
 
 ## Roadmap
 

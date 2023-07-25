@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.describe "Capybara and JavaScript", type: :feature do
+RSpec.describe "Capybara and JavaScript", :js, type: :feature do
   it "behaves as expected when using has_css? and has_no_css?" do
     page = build_page(<<-HTML)
     <section>
@@ -149,12 +149,5 @@ RSpec.describe "Capybara and JavaScript", type: :feature do
 
       expect(test_page.list.items).to have_count_of(4)
     end
-  end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run(runner: :selenium_chrome_headless)
   end
 end

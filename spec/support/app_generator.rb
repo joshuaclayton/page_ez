@@ -32,3 +32,22 @@ class AppGenerator
 
   attr_reader :app, :title
 end
+
+module BuildPage
+  def build_page(markup)
+    AppGenerator
+      .new
+      .route("/", markup)
+      .run(runner: @app_runner)
+  end
+end
+
+RSpec.configure do |config|
+  include BuildPage
+
+  config.around do |example|
+    @app_runner = (!!example.metadata[:js]) ? :selenium_chrome_headless : :rack_test
+
+    example.run
+  end
+end

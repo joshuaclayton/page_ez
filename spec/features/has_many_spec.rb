@@ -76,11 +76,4 @@ RSpec.describe "has_many", type: :feature do
     expect(test_page.sections("Section").map(&:text)).to eq(["Section 1", "Section 2"])
     expect(test_page.sections("Bogus")).to be_empty
   end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run
-  end
 end

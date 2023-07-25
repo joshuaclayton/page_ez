@@ -283,11 +283,4 @@ RSpec.describe "has_one", type: :feature do
     expect(test_page.form.name_field.value).to eq "Awesome Person"
     expect(test_page.form.email_field.value).to eq "person@example.com"
   end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run
-  end
 end

@@ -34,7 +34,6 @@ RSpec.describe "has_many_ordered", type: :feature do
       end
 
       has_many_ordered :webhooks, "ul[data-role=webhooks-list] li" do
-        # has_one :webhook_header, "div[data-role=webhook-header]" do
         has_one :header, "div[data-role=webhook-header]" do
           has_one :source, "div[data-role=webhook-source]"
         end
@@ -46,9 +45,15 @@ RSpec.describe "has_many_ordered", type: :feature do
     expect(test_page).to have_header
     expect(test_page.header).to have_heading(text: "Received Webhooks")
     expect(test_page.webhook_at(0)).to have_header
-    # expect(test_page.webhook_at(0)).to have_webhook_header
     expect(test_page.webhook_at(0).header).to have_source
-    # expect(test_page.webhook_at(0).webhook_header).to have_source
+    expect(test_page.webhook_at(0).header.source).to have_text("Recurly")
+
+    expect(test_page.webhook_at(1)).to have_header
+    expect(test_page.webhook_at(1).header).to have_source
+    expect(test_page.webhook_at(1).header.source).to have_text("Google")
+
+    expect(test_page).to have_no_webhook_at(2)
+    expect(test_page).to have_no_webhook_at(3)
   end
 
   it "allows for selection at an index", :js do
@@ -140,6 +145,61 @@ RSpec.describe "has_many_ordered", type: :feature do
     with_max_wait_time(seconds: 0.1) do
       expect(test_page.list.item_at(2, wait: 1).item_title).to have_text("Item 3")
     end
+  end
+
+  it "does not wait for JS to run when asserting has_no_\#{singular_name}_at?", :js do
+    page = build_page(<<-HTML)
+    <template id="item">
+      <li>
+        <span data-role="title"></span>
+        <input type="checkbox" name="complete" />
+      </li>
+    </template>
+
+    <section>
+      <ul>
+        <li>
+          <span data-role="title">Item 1</span>
+          <input type="checkbox" name="complete" />
+        </li>
+      </ul>
+    </section>
+
+    <script type="text/javascript">
+      function generateItem(title, target) {
+        const template = document.querySelector("template#item");
+        const item = template.content.cloneNode(true);
+        item.querySelector("span[data-role=title]").textContent = title;
+
+        target.appendChild(item);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const target = document.querySelector("section ul");
+
+        setTimeout(() => {
+          generateItem("Item 2", target);
+          generateItem("Item 3", target);
+          generateItem("Item 4", target);
+        }, 2000);
+      });
+    </script>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :list, "section ul" do
+        has_many_ordered :items, "li" do
+          has_one :item_title, "span[data-role=title]"
+        end
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    start_time = Time.now
+
+    expect(test_page.list).to have_no_item_at(1)
+    expect(Time.now - start_time).to be < 1
   end
 
   it "allows for dynamic options" do

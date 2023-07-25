@@ -4,10 +4,11 @@ require "active_support/core_ext/class/attribute"
 module PageEz
   class Page
     include DelegatesTo[:container]
-    class_attribute :visitor, :macro_registrar
+    class_attribute :visitor, :macro_registrar, :nested_macro
 
     self.visitor = PageVisitor.new
     self.macro_registrar = {}
+    self.nested_macro = false
 
     undef_method :select
 
@@ -91,7 +92,7 @@ module PageEz
     end
 
     def self.inherited(subclass)
-      if ancestors.first == PageEz::Page
+      if !nested_macro
         visitor.reset
       end
 
@@ -100,6 +101,7 @@ module PageEz
 
     def self.constructor_from_block(superclass = nil, &block)
       if block
+        self.nested_macro = true
         Class.new(superclass || self).tap do |klass|
           visitor.begin_block_evaluation
           klass.macro_registrar = {}

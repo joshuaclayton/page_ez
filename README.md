@@ -394,7 +394,6 @@ either individual `it`s or `describe`s.
 * [x] Verify page object interactions work within `within`
 * [ ] Define `form` syntax
 * [ ] Define `define` syntax (FactoryBot style)
-* [ ] "Unsafe" short-circuit for verifying elements aren't present on the page (e.g. `find("selector", count: 0)`)
 * [x] Nested/reference-able page objects (from `define` syntax, by symbol, or by class name)
 
 ## Contributing

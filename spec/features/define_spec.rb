@@ -9,7 +9,7 @@ RSpec.describe "Shorthand define syntax", type: :feature do
     po_module.define do
       page(:test) do
         has_one :heading, "heading" do
-          has_one :title, "h1"
+          has_one :page_title, "h1"
           has_one :nav, "nav" do
             has_many :links, "a"
           end

@@ -134,11 +134,4 @@ RSpec.describe "Shorthand define syntax", type: :feature do
 
     expect(test_page).to be_testing
   end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run
-  end
 end

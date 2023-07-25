@@ -78,6 +78,10 @@ RSpec.describe "has_one", type: :feature do
         def heading_tag_name
           heading.tag_name
         end
+
+        def named?(name)
+          heading.has_text?(name)
+        end
       end
 
       def section_heading_tag_name
@@ -89,6 +93,7 @@ RSpec.describe "has_one", type: :feature do
 
     expect(test_page.section.heading_tag_name).to eq("h2")
     expect(test_page.section_heading_tag_name).to eq("h2")
+    expect(test_page.section).to be_named("Section Heading")
   end
 
   it "behaves as Capybara would when there's an ambiguous match" do
@@ -110,7 +115,7 @@ RSpec.describe "has_one", type: :feature do
     expect { test_page.list.item }.to raise_error(Capybara::Ambiguous)
   end
 
-  it "allows for passing arguments to carry through to Capybara arguments" do
+  it "allows for passing positional arguments to carry through to Capybara arguments" do
     page = build_page(<<-HTML)
     <ul>
       <li>Item 1</li>
@@ -131,6 +136,29 @@ RSpec.describe "has_one", type: :feature do
     expect(test_page.list).to have_item_named("Item 1")
     expect(test_page.list).to have_item_named("Item 2")
     expect(test_page.list).not_to have_item_named("Item 3")
+  end
+
+  it "allows for passing keyword arguments to carry through to Capybara arguments" do
+    page = build_page(<<-HTML)
+    <ul>
+      <li>Item 1</li>
+      <li>Item 2</li>
+    </ul>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :list, "ul" do
+        has_one :item_named, "li", ->(name:) { {text: name} }
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    expect(test_page.list.item_named(name: "Item 1")).to be_visible
+
+    expect(test_page.list).to have_item_named(name: "Item 1")
+    expect(test_page.list).to have_item_named(name: "Item 2")
+    expect(test_page.list).not_to have_item_named(name: "Item 3")
   end
 
   it "allows for passing constant values through to Capybara arguments" do

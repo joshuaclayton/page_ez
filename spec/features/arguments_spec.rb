@@ -31,11 +31,4 @@ RSpec.describe "Arguments" do
     expect(test_page).not_to have_heading_with_required_args_and_kwarg("Hello", 2, visible: true)
     expect(test_page).to have_heading_with_hash_arg(text: "Hello")
   end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run
-  end
 end

@@ -166,11 +166,4 @@ RSpec.describe "Macros with methods" do
     expect(test_page.items(state: "incomplete").first.name).to have_text("Buy eggs")
     expect(test_page.items(state: "incomplete")[1].name).to have_text("Buy onions")
   end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run
-  end
 end

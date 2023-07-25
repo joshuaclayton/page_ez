@@ -26,11 +26,4 @@ RSpec.describe "Form interactions", type: :feature do
     test_page.form.select_thing("One")
     test_page.form.select_thing("Two")
   end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run
-  end
 end

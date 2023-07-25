@@ -58,11 +58,4 @@ RSpec.describe "Selectors" do
 
     expect(test_page).to have_heading
   end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run
-  end
 end

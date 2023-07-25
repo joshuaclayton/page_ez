@@ -51,7 +51,7 @@ RSpec.describe "has_many_ordered", type: :feature do
     # expect(test_page.webhook_at(0).webhook_header).to have_source
   end
 
-  it "allows for selection at an index" do
+  it "allows for selection at an index", :js do
     page = build_page(<<-HTML)
     <template id="item">
       <li>
@@ -174,12 +174,5 @@ RSpec.describe "has_many_ordered", type: :feature do
     expect(test_page.list_at(1, name: "List of 3 Items").items).to have_count_of(3)
     expect(test_page.list_at(2, name: "List of 2 Items").items).to have_count_of(2)
     expect(test_page).not_to have_list_at(2, name: "List of 3 Items")
-  end
-
-  def build_page(markup)
-    AppGenerator
-      .new
-      .route("/", markup)
-      .run(runner: :selenium_chrome_headless)
   end
 end

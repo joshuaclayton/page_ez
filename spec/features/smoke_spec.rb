@@ -143,4 +143,24 @@ RSpec.describe "Smoke spec", type: :feature do
       end
     end.not_to raise_error
   end
+
+  it "allows for macros across PageEz::Page subclasses to refer to the same name" do
+    expect do
+      # rubocop:disable Lint/ConstantDefinitionInBlock
+      class ComposedPage < PageEz::Page
+      end
+
+      class BasePage < PageEz::Page
+      end
+
+      class OtherPageWithComposed < PageEz::Page
+        has_one :composed_page, "section.composed"
+      end
+
+      class PageWithComposed < BasePage
+        has_one :composed_page, ComposedPage
+      end
+      # rubocop:enable Lint/ConstantDefinitionInBlock
+    end.not_to raise_error
+  end
 end

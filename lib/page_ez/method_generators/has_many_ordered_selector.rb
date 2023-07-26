@@ -45,6 +45,15 @@ module PageEz
             **evaluator.options
           )
         end
+
+        target.logged_define_method("has_no_#{singularized_name}_at?") do |index, *args|
+          evaluator = evaluator_class.run(args, target: self)
+
+          has_no_css?(
+            build_selector[evaluator.selector, index],
+            **evaluator.options
+          )
+        end
       end
 
       def selector_type

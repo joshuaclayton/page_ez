@@ -287,6 +287,21 @@ todos_list.item_at(0).complete_button.click             # => find("li:nth-of-typ
 [`Capybara::Node::Finders#find`]: https://rubydoc.info/github/teamcapybara/capybara/Capybara/Node/Finders#find-instance_method
 [`Capybara::Node::Matchers#has_css?`]: https://rubydoc.info/github/teamcapybara/capybara/Capybara/Node/Matchers#has_css%3F-instance_method
 
+## Base Selectors
+
+Certain components may exist across multiple pages but have a base selector
+from which all interactions should be scoped.
+
+This can be configured on a per-object basis:
+
+```rb
+class ApplicationHeader < PageEz::Page
+  base_selector "header[data-role=primary]"
+
+  has_one :application_title, "h1"
+end
+```
+
 ## Page Object Composition
 
 Because page objects can encompass as much or as little of the DOM as desired,

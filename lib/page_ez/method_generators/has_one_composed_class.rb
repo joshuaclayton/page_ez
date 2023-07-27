@@ -16,13 +16,13 @@ module PageEz
         base_selector = @options.delete(:base_selector)
 
         target.logged_define_method(@name) do |*args|
-          container = if base_selector
-            find(base_selector)
+          if base_selector
+            Class.new(constructor).tap do |new_constructor|
+              new_constructor.base_selector base_selector
+            end.new(self)
           else
-            self
+            constructor.new(self)
           end
-
-          constructor.new(container)
         end
 
         if base_selector

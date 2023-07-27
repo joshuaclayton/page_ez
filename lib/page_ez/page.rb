@@ -5,15 +5,26 @@ require "active_support/core_ext/module/delegation"
 module PageEz
   class Page
     include DelegatesTo[:container]
-    class_attribute :visitor, :macro_registrar, :nested_macro
+    class_attribute :visitor, :macro_registrar, :nested_macro, :container_base_selector
 
     self.visitor = PageVisitor.new
     self.macro_registrar = {}
     self.nested_macro = false
+    self.container_base_selector = nil
 
     undef_method :select
 
-    attr_reader :container
+    def container
+      if container_base_selector
+        @container.find(container_base_selector)
+      else
+        @container
+      end
+    end
+
+    def self.base_selector(value)
+      self.container_base_selector = value
+    end
 
     def initialize(container = nil)
       @container = container || Class.new do

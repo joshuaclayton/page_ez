@@ -6,14 +6,14 @@ module PageEz
       def initialize(name, selector, dynamic_options, options, &block)
         @name = name
         @selector = selector
-        @base_selector = HasManyStaticSelector.new(name, selector, dynamic_options, options, &block)
+        @core_selector = HasManyStaticSelector.new(name, selector, dynamic_options, options, &block)
         @evaluator_class = SelectorEvaluator.build(@name, dynamic_options: dynamic_options, options: options, selector: selector)
       end
 
       def run(target)
         singularized_name = Pluralization.new(@name).singularize
 
-        constructor = @base_selector.run(target)
+        constructor = @core_selector.run(target)
 
         DefineHasOneResultMethods.new(
           "#{singularized_name}_at",
@@ -30,7 +30,7 @@ module PageEz
       end
 
       def selector_type
-        @base_selector.selector_type
+        @core_selector.selector_type
       end
 
       class IndexedProcessor

@@ -6,36 +6,18 @@ module PageEz
       def initialize(name, selector, dynamic_options, options, &block)
         @name = name
         @selector = selector
-        @dynamic_options = dynamic_options
-        @options = options
         @block = block
+        @evaluator_class = SelectorEvaluator.build(name, dynamic_options: dynamic_options, options: options, selector: selector)
       end
 
       def run(target)
-        constructor = target.constructor_from_block(&@block)
-        name = @name
-        selector = @selector
-        options = @options
-        dynamic_options = @dynamic_options
-
-        evaluator_class = SelectorEvaluator.build(name, dynamic_options: dynamic_options, options: options, selector: selector)
-
-        target.logged_define_method(name) do |*args|
-          evaluator = evaluator_class.run(args, target: self)
-
-          HasManyResult.new(
-            container: container,
-            selector: evaluator.selector,
-            options: evaluator.options,
-            constructor: constructor.method(:new)
-          )
+        target.constructor_from_block(&@block).tap do |constructor|
+          DefineHasManyResultMethods.new(
+            @name,
+            evaluator_class: @evaluator_class,
+            constructor: constructor
+          ).run(target)
         end
-
-        target.logged_define_method("has_#{name}_count?") do |count, *args|
-          send(name, *args).has_count_of?(count)
-        end
-
-        constructor
       end
 
       def selector_type

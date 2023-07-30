@@ -32,7 +32,7 @@ module PageEz
             options: @options,
             selector: base_selector
           )
-          HasOnePredicateMethods.new(evaluator_class).run(target)
+          DefineHasOnePredicateMethods.new(@name, evaluator_class: evaluator_class).run(target)
         end
       end
     end

@@ -19,7 +19,7 @@ RSpec.describe "Capybara and JavaScript", :js, type: :feature do
 
     test_page = Class.new(PageEz::Page) do
       has_one :list, "ul" do
-        has_one :item_named, "li", ->(name) { {text: name} }
+        has_many :items, "li"
       end
     end.new(page)
 
@@ -29,18 +29,18 @@ RSpec.describe "Capybara and JavaScript", :js, type: :feature do
 
     with_max_wait_time(seconds: 1) do
       # waits 1 second, then proceeds
-      expect(test_page.list).not_to have_item_named("Item 2")
+      expect(test_page.list).not_to have_item_matching(text: "Item 2")
       # finds the element immediately, then proceeds
-      expect(test_page.list).to have_item_named("Item 1")
+      expect(test_page.list).to have_item_matching(text: "Item 1")
     end
 
     expect(Time.now - start_time).to be_between(0.9, 1.5)
 
     with_max_wait_time(seconds: 2) do
       # waits ~500ms until the element is removed, then proceeds
-      expect(test_page.list).to have_no_item_named("Item 1")
+      expect(test_page.list).to have_no_item_matching(text: "Item 1")
       # doesn't find the element and proceeds immediately
-      expect(test_page.list).to have_no_item_named("Item 1")
+      expect(test_page.list).to have_no_item_matching(text: "Item 1")
     end
 
     expect(Time.now - start_time).to be_between(1.35, 4)

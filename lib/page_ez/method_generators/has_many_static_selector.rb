@@ -17,6 +17,19 @@ module PageEz
             evaluator_class: @evaluator_class,
             constructor: constructor
           ).run(target)
+
+          singularized_name = Pluralization.new(@name).singularize
+
+          DefineHasOneResultMethods.new(
+            "#{singularized_name}_matching",
+            evaluator_class: @evaluator_class,
+            constructor: constructor
+          ).run(target)
+
+          DefineHasOnePredicateMethods.new(
+            "#{singularized_name}_matching",
+            evaluator_class: @evaluator_class
+          ).run(target)
         end
       end
 

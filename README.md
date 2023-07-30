@@ -66,15 +66,15 @@ it "manages todos state when completing" do
   todos_index = TodosIndex.new
 
   expect(todos_index.active_todo_names).to eq(["Buy milk", "Buy eggs"])
-  todos_index.active_list.items.first.mark_complete
+  todos_index.active_list.item_matching(text: "Buy milk").mark_complete
   expect(todos_index.active_todo_names).to eq(["Buy eggs"])
-  todos_index.active_list.items.first.mark_complete
+  todos_index.active_list.item_matching(text: "Buy eggs").mark_complete
 
   expect(todos_index.active_todo_names).to be_empty
 
-  todos_index.completed_list.items.first.mark_incomplete
+  todos_index.completed_list.item_matching(text: "Buy milk").mark_incomplete
   expect(todos_index.active_todo_names).to eq(["Buy milk"])
-  todos_index.completed_list.items.first.mark_incomplete
+  todos_index.completed_list.item_matching(text: "Buy eggs").mark_incomplete
   expect(todos_index.active_todo_names).to eq(["Buy milk", "Buy eggs"])
 end
 ```

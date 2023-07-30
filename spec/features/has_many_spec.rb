@@ -16,13 +16,24 @@ RSpec.describe "has_many", type: :feature do
     HTML
 
     test_page = Class.new(PageEz::Page) do
-      has_many :todos, "ul li"
+      has_many :todos, "ul li" do
+        has_one :name, "span[data-role=todo-name]"
+      end
+
       has_many :todo_names, "ul li span[data-role='todo-name']"
     end.new(page)
 
     page.visit "/"
 
     expect(test_page.todos.count).to eq(2)
+    expect(test_page).to have_todo_matching(text: "Buy milk")
+    expect(test_page).to have_todo_matching(text: "Buy eggs")
+    expect(test_page).to have_no_todo_matching(text: "Buy yogurt")
+    expect(test_page.todo_matching(text: "Buy milk")).to have_name(text: "Buy milk")
+    expect(test_page.todo_matching(text: "Buy milk")).to have_button("Done")
+    expect(test_page.todo_matching(text: "Buy eggs")).to have_name(text: "Buy eggs")
+    expect(test_page.todo_matching(text: "Buy eggs")).to have_button("Done")
+    expect(test_page.todo_matching(text: "Buy", match: :first)).to have_name(text: "Buy milk")
     expect(test_page.todo_names.map(&:text)).to eq(["Buy milk", "Buy eggs"])
   end
 

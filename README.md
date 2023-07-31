@@ -89,7 +89,32 @@ class BlogPost < PageEz::Page
   has_one :body, "section[data-role=post-body]"
   has_one :published_date, "time[data-role=published-date]"
 end
+
+# generates the following methods:
+
+blog_post = BlogPost.new
+
+blog_post.post_title             # => find("header h2")
+blog_post.has_post_title?        # => has_css?("header h2")
+blog_post.has_no_post_title?     # => has_no_css?("header h2")
+
+blog_post.body                   # => find("section[data-role=post-body]")
+blog_post.has_body?              # => has_css?("section[data-role=post-body]")
+blog_post.has_no_body?           # => has_no_css?("section[data-role=post-body]")
+
+blog_post.published_date         # => find("time[data-role=published-date]")
+blog_post.has_published_date?    # => has_css?("time[data-role=published-date]")
+blog_post.has_no_published_date? # => has_no_css?("time[data-role=published-date]")
+
+blog_post.post_title(text: "Writing Ruby is Fun!")           # => find("header h2", text: "Writing Ruby is Fun!")
+blog_post.has_post_title?(text: "Writing Ruby is Fun!")      # => has_css?("header h2", text: "Writing Ruby is Fun!")
+blog_post.has_no_post_title?(text: "Writing Ruby is Boring") # => has_no_css?("header h2", text: "Writing Ruby is Boring")
 ```
+
+The methods defined by PageEz can be passed additional options from Capybara. Refer to documentation for the following methods:
+
+* [`Capybara::Node::Finders#find`]
+* [`Capybara::Node::Matchers#has_css?`]
 
 ### `has_many`
 
@@ -99,7 +124,27 @@ You can define accessors to multiple elements (matched with Capybara's `all`):
 class TodosIndex < PageEz::Page
   has_many :todos, "ul li span[data-role=todo-name]"
 end
+
+# generates the following methods:
+
+todos_index = TodosIndex.new
+
+todos_index.todos                                   # => all("ul li span[data-role=todo-name]")
+todos_index.has_todos?                              # => has_css?("ul li span[data-role=todo-name]")
+todos_index.has_no_todos?                           # => has_no_css?("ul li span[data-role=todo-name]")
+
+todos_index.todo_matching(text: "Buy milk")         # => find("ul li span[data-role=todo-name]", text: "Buy milk")
+todos_index.has_todo_matching?(text: "Buy milk")    # => has_css?("ul li span[data-role=todo-name]", text: "Buy milk")
+todos_index.has_no_todo_matching?(text: "Buy milk") # => has_no_css?("ul li span[data-role=todo-name]", text: "Buy milk")
+
+todos_index.todos.has_count_of?(number)             # => has_css?("ul li span[data-role=todo-name]", count: number)
+todos_index.has_todos_count?(number)                # => has_css?("ul li span[data-role=todo-name]", count: number)
 ```
+
+The methods defined by PageEz can be passed additional options from Capybara. Refer to documentation for the following methods:
+
+* [`Capybara::Node::Finders#all`]
+* [`Capybara::Node::Matchers#has_css?`]
 
 ### `has_many_ordered`
 
@@ -108,26 +153,26 @@ elements at a specific index.
 
 ```rb
 class TodosIndex < PageEz::Page
-  has_many_ordered :todos, "ul[data-role=todo-list] li" do
-    has_one :todo_title, "span[data-role=todo-title]"
-    has_one :complete, "input[type=checkbox][data-role=mark-complete]"
-
-    def complete?
-      complete.checked?
-    end
-  end
+  has_many_ordered :todos, "ul[data-role=todo-list] li"
 end
 
-todos_index = TodosIndex.new
+# generates the base has_many methods (see above)
 
-expect(todos_index.todo_at(0)).to have_text("Buy milk")
-# or
-expect(todos_index).to have_todo_at(0, text: "Buy milk")
+# in addition, it generates the ability to access at an index. The index passed
+# to Ruby will be translated to the appropriate `:nth-of-child` (which is a
+# 1-based index rather than 0-based)
 
-todos_index.todo_at(0).complete.click
+todos_index.todo_at(0)                   # => find("ul[data-role=todo-list] li:nth-of-type(1)")
+todos_index.has_todo_at?(0)              # => has_css?("ul[data-role=todo-list] li:nth-of-type(1)")
+todos_index.has_no_todo_at?(0)           # => has_no_css?("ul[data-role=todo-list] li:nth-of-type(1)")
 
-expect(todos_index.todo_at(0)).to be_complete
+todos_index.todo_at(0, text: "Buy milk") # => find("ul[data-role=todo-list] li:nth-of-type(1)", text: "Buy milk")
 ```
+
+The methods defined by PageEz can be passed additional options from Capybara. Refer to documentation for the following methods:
+
+* [`Capybara::Node::Finders#find`]
+* [`Capybara::Node::Matchers#has_css?`]
 
 ### Using Methods as Dynamic Selectors
 
@@ -144,6 +189,13 @@ class TodosIndex < PageEz::Page
     "[data-model=todo][data-model-id=#{id}]"
   end
 end
+
+# generates the same methods as has_one (see above) but with a required `id:` keyword argument
+
+todos_index = TodosIndex.new
+todos_index.todo_by_id(id: 5)         # => find("[data-model=todo][data-model-id=5]")
+todos_index.has_todo_by_id?(id: 5)    # => has_css?("[data-model=todo][data-model-id=5]")
+todos_index.has_no_todo_by_id?(id: 5) # => has_no_css?("[data-model=todo][data-model-id=5]")
 ```
 
 The first mechanism declares the `has_one :todo_by_id` at the top of the file,
@@ -204,8 +256,36 @@ expect(todos).to have_item_at(1, state: "incomplete")
 expect(todos).not_to have_item_at(2, state: "incomplete")
 ```
 
-While the gem is under active development and the APIs are being determined,
-it's best to review the feature specs to understand how to use the gem.
+One key aspect of PageEz is that page hierarchy can be codified and scoped for interaction.
+
+```rb
+class TodosList
+  has_many_ordered :items, "li" do
+    has_one :name, "span[data-role=name]"
+    has_one :complete_button, "input[type=checkbox][data-action=toggle-complete]"
+  end
+end
+
+# generates the following method chains
+
+todos_list = TodosList.new
+
+todos_list.items.first.name                             # => all("li").first.find("span[data-role=name]")
+todos_list.items.first.has_name?                        # => all("li").first.has_css?("span[data-role=name]")
+todos_list.items.first.has_no_name?(text: "Buy yogurt") # => all("li").first.has_no_css?("span[data-role=name]", text: "Buy yogurt")
+todos_list.items.first.complete_button.click            # => all("li").first.find("input[type=checkbox][data-action=toggle-complete]").click
+
+# and, because we're using has_many_ordered:
+
+todos_list.item_at(0).name                              # => find("li:nth-of-type(1)").find("span[data-role=name]")
+todos_list.item_at(0).has_name?                         # => find("li:nth-of-type(1)").has_css?("span[data-role=name]")
+todos_list.item_at(0).has_no_name?(text: "Buy yogurt")  # => find("li:nth-of-type(1)").has_no_css?("span[data-role=name]", text: "Buy yogurt")
+todos_list.item_at(0).complete_button.click             # => find("li:nth-of-type(1)").find("input[type=checkbox][data-action=toggle-complete]").click
+```
+
+[`Capybara::Node::Finders#all`]: https://rubydoc.info/github/teamcapybara/capybara/Capybara/Node/Finders#all-instance_method
+[`Capybara::Node::Finders#find`]: https://rubydoc.info/github/teamcapybara/capybara/Capybara/Node/Finders#find-instance_method
+[`Capybara::Node::Matchers#has_css?`]: https://rubydoc.info/github/teamcapybara/capybara/Capybara/Node/Matchers#has_css%3F-instance_method
 
 ## Page Object Composition
 

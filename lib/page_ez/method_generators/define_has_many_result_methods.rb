@@ -19,12 +19,16 @@ module PageEz
         target.logged_define_method(name) do |*args|
           evaluator = evaluator_class.run(processor.run_args(args), target: self)
 
-          PageEz::HasManyResult.new(
-            container: container,
-            selector: processor.selector(evaluator.selector, args),
-            options: evaluator.options,
-            constructor: constructor.method(:new)
-          )
+          selector = processor.selector(evaluator.selector, args)
+
+          PageEz.reraise_selector_error(selector) do
+            PageEz::HasManyResult.new(
+              container: container,
+              selector: selector,
+              options: evaluator.options,
+              constructor: constructor.method(:new)
+            )
+          end
         end
 
         target.logged_define_method("has_#{name}_count?") do |count, *args|

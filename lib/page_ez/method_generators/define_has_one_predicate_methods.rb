@@ -14,19 +14,27 @@ module PageEz
         target.logged_define_method("has_#{@name}?") do |*args|
           evaluator = evaluator_class.run(processor.run_args(args), target: self)
 
-          has_css?(
-            processor.selector(evaluator.selector, args),
-            **evaluator.options
-          )
+          selector = processor.selector(evaluator.selector, args)
+
+          PageEz.reraise_selector_error(selector) do
+            has_css?(
+              selector,
+              **evaluator.options
+            )
+          end
         end
 
         target.logged_define_method("has_no_#{@name}?") do |*args|
           evaluator = evaluator_class.run(processor.run_args(args), target: self)
 
-          has_no_css?(
-            processor.selector(evaluator.selector, args),
-            **evaluator.options
-          )
+          selector = processor.selector(evaluator.selector, args)
+
+          PageEz.reraise_selector_error(selector) do
+            has_no_css?(
+              selector,
+              **evaluator.options
+            )
+          end
         end
       end
     end

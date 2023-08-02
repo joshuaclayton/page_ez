@@ -33,6 +33,10 @@ module PageEz
         @depth_visitor.track_method_renamed(from, to)
       end
 
+      def track_method_delegated(name)
+        @depth_visitor.track_method_delegated(name)
+      end
+
       def process_macro(macro, name, construction_strategy)
         @depth_visitor.process_macro(macro, name, construction_strategy)
         rendered = "#{macro} :#{name}, \"#{construction_strategy.selector}\""

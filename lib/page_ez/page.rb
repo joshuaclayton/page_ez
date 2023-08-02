@@ -1,5 +1,6 @@
 require "capybara/dsl"
 require "active_support/core_ext/class/attribute"
+require "active_support/core_ext/module/delegation"
 
 module PageEz
   class Page
@@ -25,6 +26,14 @@ module PageEz
 
       if macro_registrar.key?(name)
         macro_registrar[name].run(self)
+      end
+    end
+
+    def self.delegate(...)
+      super(...).tap do |method_names|
+        method_names.each do |method_name|
+          visitor.track_method_delegated(method_name)
+        end
       end
     end
 

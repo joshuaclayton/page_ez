@@ -27,6 +27,14 @@ module PageEz
         current_renamed_methods.push(from)
       end
 
+      def track_method_delegated(name)
+        if current_all_methods.count { _1 == name } > 1
+          raise DuplicateElementDeclarationError, "duplicate element :#{name} declared"
+        end
+
+        current_delegated_methods.push(name)
+      end
+
       def track_method_added(name, construction_strategy)
         @declared_constructors[parent_id] ||= []
 
@@ -37,6 +45,10 @@ module PageEz
         end
 
         if current_renamed_methods.include?(name) && current_all_methods.include?(name)
+          raise DuplicateElementDeclarationError, "duplicate element :#{name} declared"
+        end
+
+        if current_delegated_methods.include?(name) && current_all_methods.include?(name)
           raise DuplicateElementDeclarationError, "duplicate element :#{name} declared"
         end
 
@@ -59,6 +71,7 @@ module PageEz
         @current_strategy = nil
         @declared_constructors = {}
         @all_methods = {}
+        @delegated_methods = {}
         @renamed_methods = {}
       end
 
@@ -76,6 +89,11 @@ module PageEz
       def current_all_methods
         @all_methods[parent_id] ||= []
         @all_methods[parent_id]
+      end
+
+      def current_delegated_methods
+        @delegated_methods[parent_id] ||= []
+        @delegated_methods[parent_id]
       end
     end
   end

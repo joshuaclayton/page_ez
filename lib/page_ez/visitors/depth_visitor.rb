@@ -30,6 +30,9 @@ module PageEz
       def track_method_renamed(*)
       end
 
+      def track_method_delegated(*)
+      end
+
       def process_macro(*)
       end
 

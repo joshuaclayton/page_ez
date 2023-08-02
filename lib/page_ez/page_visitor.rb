@@ -51,6 +51,12 @@ module PageEz
       end
     end
 
+    def track_method_delegated(name)
+      @visitors.each do |visitor|
+        visitor.track_method_delegated(name)
+      end
+    end
+
     def process_macro(macro, name, construction_strategy)
       @visitors.each do |visitor|
         visitor.process_macro(macro, name, construction_strategy)

@@ -26,6 +26,21 @@ module PageEz
       self.container_base_selector = value
     end
 
+    def self.contains(page_object, only: nil)
+      delegation_target = :"__page_object_#{page_object.object_id}__"
+
+      has_one(delegation_target, page_object)
+
+      if only
+        methods_delegated_that_do_not_exist = only - page_object.instance_methods(false)
+        if methods_delegated_that_do_not_exist.any?
+          raise NoMethodError, "Attempting to delegate non-existent method(s) to #{page_object}: #{methods_delegated_that_do_not_exist.join(", ")}"
+        end
+      end
+
+      delegate(*(only || page_object.instance_methods(false)), to: delegation_target)
+    end
+
     def initialize(container = nil)
       @container = container || Class.new do
         include Capybara::DSL

@@ -174,6 +174,72 @@ The methods defined by PageEz can be passed additional options from Capybara. Re
 * [`Capybara::Node::Finders#find`]
 * [`Capybara::Node::Matchers#has_css?`]
 
+### `contains`
+
+This provides a shorthand for delegating methods from one page object to
+another, flattening the hierarchy of page objects and making it easier to
+interact with application-level componentry.
+
+```rb
+class SidebarModal < PageEz::Page
+  base_selector "div[data-role=sidebar]"
+
+  has_one :sidebar_heading, "h2"
+  has_one :sidebar_contents, "section[data-role=contents]"
+end
+
+class PeopleIndex < PageEz::Page
+  contains SidebarModal
+
+  has_many :people_rows, "ul[data-role=people-list] li" do
+    has_one :name, "span[data-role=person-name]"
+    has_one :edit_link, "a", text: "Edit"
+  end
+
+  def change_person_name(from:, to:)
+    people_row_matching(text: from).edit_link.click
+
+    within sidebar_contents do
+      fill_in "Name", with: to
+      click_on "Save Person"
+    end
+  end
+end
+```
+
+By default, this delegates all methods to an instance of the page object. If
+you prefer to delegate a subset of the methods, you can do so with the `only`
+option:
+
+```rb
+class SidebarModal < PageEz::Page
+  base_selector "div[data-role=sidebar]"
+
+  has_one :sidebar_heading, "h2"
+  has_one :sidebar_contents, "section[data-role=contents]"
+end
+
+class PeopleIndex < PageEz::Page
+  contains SidebarModal, only: %i[sidebar_contents]
+end
+```
+
+The equivalent functionality could be achieved with:
+
+```rb
+class SidebarModal < PageEz::Page
+  base_selector "div[data-role=sidebar]"
+
+  has_one :sidebar_heading, "h2"
+  has_one :sidebar_contents, "section[data-role=contents]"
+end
+
+class PeopleIndex < PageEz::Page
+  has_one :sidebar_modal, SidebarModal
+  delegate :sidebar_contents, to: :sidebar_modal
+end
+```
+
 ### Using Methods as Dynamic Selectors
 
 In the examples above, the CSS selectors are static.

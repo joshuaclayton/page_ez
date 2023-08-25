@@ -87,4 +87,47 @@ RSpec.describe "has_many", type: :feature do
     expect(test_page.sections("Section").map(&:text)).to eq(["Section 1", "Section 2"])
     expect(test_page.sections("Bogus")).to be_empty
   end
+
+  it "allows for checking for any or no elements" do
+    page = build_page(<<-HTML)
+    <div>
+      <ul>
+        <li>1-1</li>
+        <li>1-2</li>
+        <li>1-3</li>
+      </ul>
+
+      <ul>
+      </ul>
+    </div>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :first_list, "ul:nth-of-type(1)" do
+        has_many :items, "li"
+      end
+
+      has_one :second_list, "ul:nth-of-type(2)" do
+        has_many :items, "li"
+      end
+
+      has_one :third_list, "ul:nth-of-type(3)" do
+        has_many :items, "li"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    expect(test_page.first_list.items).to have_any_elements
+    expect(test_page.first_list.items).not_to have_no_elements
+
+    expect(test_page.second_list.items).not_to have_any_elements
+    expect(test_page.second_list.items).to have_no_elements
+
+    expect(test_page.first_list).to have_items
+    expect(test_page.first_list).not_to have_no_items
+
+    expect(test_page.second_list).not_to have_items
+    expect(test_page.second_list).to have_no_items
+  end
 end

@@ -150,4 +150,54 @@ RSpec.describe "Capybara and JavaScript", :js, type: :feature do
       expect(test_page.list.items).to have_count_of(4)
     end
   end
+
+  it "allows for checking for any results" do
+    page = build_page(<<-HTML)
+    <template id="item">
+      <li></li>
+    </template>
+
+    <section>
+      <ul>
+      </ul>
+    </section>
+
+    <script type="text/javascript">
+      function generateItem(title, target) {
+        const template = document.querySelector("template#item");
+        const item = template.content.cloneNode(true);
+        item.querySelector("li").textContent = title;
+
+        target.appendChild(item);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const target = document.querySelector("section ul");
+
+        setTimeout(() => {
+          generateItem("Item 1", target);
+          generateItem("Item 2", target);
+          generateItem("Item 3", target);
+        }, 4500);
+      });
+    </script>
+    HTML
+
+    test_page = Class.new(PageEz::Page) do
+      has_one :list, "ul" do
+        has_many :items, "li"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    with_max_wait_time(seconds: 1) do
+      expect(test_page.list).not_to have_items
+      expect(test_page.list).to have_no_items
+    end
+
+    with_max_wait_time(seconds: 2) do
+      expect(test_page.list).to have_items
+    end
+  end
 end

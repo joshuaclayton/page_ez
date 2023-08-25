@@ -34,6 +34,14 @@ module PageEz
         target.logged_define_method("has_#{name}_count?") do |count, *args|
           send(name, *args).has_count_of?(count)
         end
+
+        target.logged_define_method("has_#{name}?") do |*args|
+          send(name, *args).has_any_elements?
+        end
+
+        target.logged_define_method("has_no_#{name}?") do |*args|
+          send(name, *args).has_no_elements?
+        end
       end
     end
   end

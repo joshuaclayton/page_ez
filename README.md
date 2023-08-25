@@ -139,6 +139,9 @@ todos_index.has_no_todo_matching?(text: "Buy milk") # => has_no_css?("ul li span
 
 todos_index.todos.has_count_of?(number)             # => has_css?("ul li span[data-role=todo-name]", count: number)
 todos_index.has_todos_count?(number)                # => has_css?("ul li span[data-role=todo-name]", count: number)
+
+todos_index.todos.has_any_elements?                 # => has_css?("ul li span[data-role=todo-name]")
+todos_index.todos.has_no_elements?                  # => has_no_css?("ul li span[data-role=todo-name]")
 ```
 
 The methods defined by PageEz can be passed additional options from Capybara. Refer to documentation for the following methods:

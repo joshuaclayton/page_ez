@@ -20,5 +20,16 @@ module PageEz
         **@options.merge(count: count)
       )
     end
+
+    def has_any_elements?
+      @container.has_css?(
+        @selector,
+        **@options
+      )
+    end
+
+    def has_no_elements?
+      @container.has_no_css?(@selector, **@options)
+    end
   end
 end

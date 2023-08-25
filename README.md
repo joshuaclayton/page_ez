@@ -6,17 +6,12 @@ PageEz is a tool to define page objects with [Capybara].
 
 [Capybara]: https://github.com/teamcapybara/capybara
 
-## Alpha Software - Proof of Concept
-
-This is currently a proof of concept. The interface, name, and potentially
-anything else may change vastly.
-
 ## Installation
 
 Add the gem to your `Gemfile`:
 
 ```
-gem "page_ez", git: "https://github.com/joshuaclayton/page_ez"
+gem "page_ez"
 ```
 
 ## Usage

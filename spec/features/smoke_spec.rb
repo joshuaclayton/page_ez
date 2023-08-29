@@ -163,4 +163,21 @@ RSpec.describe "Smoke spec", type: :feature do
       # rubocop:enable Lint/ConstantDefinitionInBlock
     end.not_to raise_error
   end
+
+  it "allows for inheritance where macros do not collide" do
+    expect do
+      composed_page = Class.new(PageEz::Page) do
+        has_one :nested, "section" do
+        end
+      end
+
+      Class.new(PageEz::Page) do
+        has_one :list, "ul"
+      end
+
+      Class.new(composed_page) do
+        has_one :list, "ul"
+      end
+    end.not_to raise_error
+  end
 end

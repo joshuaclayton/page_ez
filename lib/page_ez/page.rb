@@ -142,6 +142,7 @@ module PageEz
           klass.macro_registrar = {}
           klass.class_eval(&block)
           visitor.end_block_evaluation
+          self.nested_macro = false
         end
       elsif superclass
         superclass

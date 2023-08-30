@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    page_ez (0.1.0)
+    page_ez (0.2.0)
       activesupport (>= 5.0)
       capybara (~> 3.0)
 

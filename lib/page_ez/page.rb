@@ -140,6 +140,7 @@ module PageEz
         Class.new(superclass || self).tap do |klass|
           visitor.begin_block_evaluation
           klass.macro_registrar = {}
+          klass.container_base_selector = nil
           klass.class_eval(&block)
           visitor.end_block_evaluation
           self.nested_macro = false

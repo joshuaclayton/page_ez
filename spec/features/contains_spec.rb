@@ -49,6 +49,66 @@ RSpec.describe "contains" do
     expect(test_page).to be_awesome
   end
 
+  it "correctly stops base selector propagation within page hierarchy" do
+    page = build_page(<<-HTML)
+    <table data-role=test-me>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td class="one"><span>2</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>2</td>
+        </tr>
+
+        <tr>
+          <td>1</td>
+          <td>2</td>
+        </tr>
+      </tbody>
+    </table>
+    HTML
+
+    table = Class.new(PageEz::Page) do
+      base_selector "table[data-role=test-me]"
+
+      has_many_ordered :rows, "tbody tr" do
+        has_many :cells, "td"
+      end
+
+      has_many_ordered :other_rows, "tbody tr" do
+        base_selector ".one"
+
+        has_many :spans, "span"
+      end
+
+      has_many_ordered :broken_rows, "tbody tr" do
+        base_selector "bogus"
+
+        has_many :spans, "span"
+      end
+    end.new(page)
+
+    page.visit "/"
+
+    expect(table.rows.count).to eq(1)
+    expect(table.row_at(0).cells.count).to eq(2)
+
+    expect(table.other_rows.count).to eq(1)
+    expect(table.other_row_at(0).spans.count).to eq(1)
+
+    expect(table.broken_rows.count).to eq(1)
+    expect do
+      table.broken_row_at(0).spans.count
+    end.to raise_error(Capybara::ElementNotFound)
+  end
+
   it "allows multiple page objects to use contains with the same page object" do
     expect do
       heading = Class.new(PageEz::Page) do

@@ -10,7 +10,7 @@ PageEz is a tool to define page objects with [Capybara].
 
 Add the gem to your `Gemfile`:
 
-```
+```rb
 gem "page_ez"
 ```
 
@@ -323,7 +323,7 @@ expect(todos).not_to have_item_at(2, state: "incomplete")
 One key aspect of PageEz is that page hierarchy can be codified and scoped for interaction.
 
 ```rb
-class TodosList
+class TodosList < PageEz::Page
   has_many_ordered :items, "li" do
     has_one :name, "span[data-role=name]"
     has_one :complete_button, "input[type=checkbox][data-action=toggle-complete]"

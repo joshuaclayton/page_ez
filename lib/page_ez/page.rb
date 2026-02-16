@@ -5,6 +5,7 @@ require "active_support/core_ext/module/delegation"
 module PageEz
   class Page
     include DelegatesTo[:container]
+
     class_attribute :visitor, :macro_registrar, :nested_macro, :container_base_selector
 
     self.visitor = PageVisitor.new
@@ -56,7 +57,7 @@ module PageEz
     end
 
     def self.delegate(...)
-      super(...).tap do |method_names|
+      super.tap do |method_names|
         method_names.each do |method_name|
           visitor.track_method_delegated(method_name)
         end

@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "PageEz is a tool to define page objects with Capybara"
   spec.homepage = "https://github.com/joshuaclayton/page_ez"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.0.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/joshuaclayton/page_ez"
@@ -35,6 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "standard", "~> 1.3"
   spec.add_development_dependency "sinatra", "~> 3.0"
+  spec.add_development_dependency "ostruct"
   spec.add_development_dependency "selenium-webdriver", "~> 4.10"
   spec.add_development_dependency "puma", "~> 6.3"
   spec.add_development_dependency "launchy", "~> 2.5"

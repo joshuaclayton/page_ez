@@ -71,7 +71,7 @@ RSpec.describe "Page object composition", type: :feature do
   end
 
   def build_page(markup)
-    super(markup).tap do |session|
+    super.tap do |session|
       # this simulates more standard Rails testing behavior, where a `page`
       # isn't assigned to explicitly.
       allow(Capybara).to receive(:current_session).and_return(session)

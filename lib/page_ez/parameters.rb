@@ -1,7 +1,7 @@
 module PageEz
   class Parameters
     def self.build(block)
-      if block&.respond_to?(:parameters) && block&.respond_to?(:arity)
+      if block&.respond_to?(:parameters) && block.respond_to?(:arity)
         new(block)
       else
         NullParameters.new
